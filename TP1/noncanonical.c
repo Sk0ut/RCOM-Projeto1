@@ -5,8 +5,8 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
+#include <strings.h>
 #include <stdlib.h>
-#include <strings.h>	
 
 #define BAUDRATE B38400
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 
     if ( (argc < 2) || 
   	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS1", argv[1])!=0) )) {
+  	      (strcmp("/dev/ttyS4", argv[1])!=0) )) {
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
       exit(1);
     }
@@ -52,14 +52,21 @@ int main(int argc, char** argv)
     tcflush(fd, TCIFLUSH);
     tcsetattr(fd,TCSANOW,&newtio);
 
-    printf("New termios structure set\n");
+    /* printf("New termios structure set\n"); */
+    res = 0;
 
     while (STOP==FALSE) {       /* loop for input */
-      res = read(fd,buf,255);   /* returns after 1 char have been input */
-      buf[res]=0;               /* so we can printf... */
-      printf(":%s:%d\n", buf, res);
-      if (buf[0]=='z') STOP=TRUE;
+      res += read(fd,buf+res,1);   /* returns after 1 char has been input */
+      if (buf[res-1] == '\0') {
+        STOP = TRUE;
+      }
     }
+
+    printf("Read message: %s (%d bytes)\n", buf, res);
+
+    res = write(fd, buf, res);
+    printf("Message resent (%d bytes)\n", res);
+
     tcsetattr(fd,TCSANOW,&oldtio);
     close(fd);
     return 0;
