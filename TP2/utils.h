@@ -1,0 +1,20 @@
+#ifndef __UTILS
+#define __UTILS
+
+#define SERIAL_FLAG 0x7E
+#define SERIAL_ESCAPE 0x7D
+#define SERIAL_FLAG_REPLACE 0x5E
+#define SERIAL_ESCAPE_REPLACE 0x5D
+
+#define SERIAL_A_COM_TRANSMITTER 0x03
+#define SERIAL_A_ANS_RECEIVER 0x03
+#define SERIAL_A_COM_RECIVER 0x01
+#define SERIAL_A_ANS_TRANSMITTER 0x01
+#define SERIAL_C_SET 0x07
+#define SERIAL_C_DISC 0x0B
+#define SERIAL_C_UA 0x03
+//#define SERIAL_C_RR 0x???1
+//#define SERIAL_C_REJ 0x???5
+
+
+#endif /* __UTILS */
