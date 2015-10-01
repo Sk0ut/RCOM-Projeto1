@@ -67,6 +67,8 @@ int main(int argc, char** argv)
     res = write(fd, buf, res);
     printf("Message resent (%d bytes)\n", res);
 
+    sleep(5);
+
     tcsetattr(fd,TCSANOW,&oldtio);
     close(fd);
     return 0;

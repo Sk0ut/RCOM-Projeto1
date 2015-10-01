@@ -89,7 +89,9 @@ int main(int argc, char** argv)
 	}
 	printf("Resent data: %s", buf);
 	printf(" (%d bytes received)\n",res);
-    
+
+    sleep(5);
+
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);
