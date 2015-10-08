@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <strings.h>
 #include <stdlib.h>
+#include "utils.h"
 
 #define BAUDRATE B38400
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
@@ -17,10 +18,6 @@ volatile int STOP=FALSE;
 
 int main(int argc, char** argv)
 {
-    int fd,c, res;
-    struct termios oldtio,newtio;
-    char buf[255];
-
     if ( (argc < 2) || 
   	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
   	      (strcmp("/dev/ttyS4", argv[1])!=0) )) {
@@ -33,9 +30,10 @@ int main(int argc, char** argv)
     because we don't want to get killed if linenoise sends CTRL-C.
   */
       
-    fd = open(argv[1], O_RDWR | O_NOCTTY );
+    int fd = open(argv[1], O_RDWR | O_NOCTTY );
     if (fd <0) {perror(argv[1]); exit(-1); }
 
+    struct termios oldtio,newtio;
     tcgetattr(fd,&oldtio); /* save current port settings */
 
     bzero(&newtio, sizeof(newtio));
@@ -52,21 +50,15 @@ int main(int argc, char** argv)
     tcflush(fd, TCIFLUSH);
     tcsetattr(fd,TCSANOW,&newtio);
 
-    /* printf("New termios structure set\n"); */
-    res = 0;
+    char message[SERIAL_SU_STRING_SIZE + 1];
 
-    while (STOP==FALSE) {       /* loop for input */
-      res += read(fd,buf+res,1);   /* returns after 1 char has been input */
-      if (buf[res-1] == '\0') {
-        STOP = TRUE;
-      }
-    }
-
-    printf("Read message: %s (%d bytes)\n", buf, res);
-
-    res = write(fd, buf, res);
-    printf("Message resent (%d bytes)\n", res);
-
+    ua_string[0] = SERIAL_FLAG;
+    ua_string[1] = SERIAL_A_ANS_RECEIVER;
+    ua_string[2] = SERIAl_C_UA;
+    ua_string[3] = ua_string[1] ^ ua_string[2];
+    ua_string[4] = SERIAL_FLAG;    
+    
+    
     sleep(5);
 
     tcsetattr(fd,TCSANOW,&oldtio);
