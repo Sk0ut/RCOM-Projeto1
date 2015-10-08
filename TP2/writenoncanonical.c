@@ -9,12 +9,16 @@
 #include <strings.h>
 #include <string.h>
 
+#include "utils.h"
+
 #define BAUDRATE B38400
-#define MAX_SIZE 255
 #define MODEMDEVICE "/dev/ttyS1"
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
+
 #define FALSE 0
 #define TRUE 1
+
+#define MAX_SIZE 255
 
 volatile int STOP=FALSE;
 
@@ -22,8 +26,10 @@ int main(int argc, char** argv)
 {
     int fd,c, res;
     struct termios oldtio,newtio;
-    char buf[MAX_SIZE];
     int i, sum = 0, speed = 0;
+
+    char set_string[SERIAL_SU_STRING_SIZE];
+    char ua_string[SERIAL_SU_STRING_SIZE];
     
     if ( (argc < 2) || 
   	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
@@ -56,7 +62,7 @@ int main(int argc, char** argv)
     newtio.c_lflag = 0;
 
     newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 5;   /* blocking read until 1 char received */
+    newtio.c_cc[VMIN]     = 5;   /* blocking read until 5 chars received */
 
 
     tcflush(fd, TCIFLUSH);
@@ -66,29 +72,18 @@ int main(int argc, char** argv)
       exit(-1);
     }
 
+    /* Set SET string values */
 
-	/* TEST CODE */
+    set_string[0] = SERIAL_FLAG;
+    set_string[1] = SERIAL_A_COM_TRANSMITTER;
+    set_string[2] = SERIAL_C_SET;
+    set_string[3] = set_string[1] ^ set_string[2];
+    set_string[4] = SERIAL_FLAG;
 
-    /*for (i = 0; i < 255; i++) {
-      buf[i] = 'a';
-    }*/
-    
-    /*testing*/
-    //buf[25] = '\n';
-    
-    res = write(fd,buf,strlen(buf)+1);   
+    /* Send SET string */
+    res = write(fd,set_string,SERIAL_SU_STRING_SIZE);
 
-	printf("(%d bytes written)\n", res);
-	res = 0;
-	bzero(buf,MAX_SIZE);
-	while (STOP==FALSE) {       /* loop for input */
-		res+=read(fd,buf+res,1);   /* returns after 1 char have been input */
-		if(buf[res-1] == '\0'){
-			STOP = TRUE;
-		}
-	}
-	printf("Resent data: %s", buf);
-	printf(" (%d bytes received)\n",res);
+    /* */
 
     sleep(5);
 
