@@ -1,5 +1,12 @@
 #include "utils.h"
 
+int is_valid_s_u(const char* string);
+int is_a_flag(const char a);
+int is_c_flag(const char c);
+int is_valid_bcc(const char a, const char c, const char bcc);
+int is_valid_combination(const char a, const char c);
+int is_valid_i(const char* string, int string_length);
+
 int serial_read_string(int fd, char* string){
 	int length = 0;
 	char c;

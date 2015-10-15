@@ -28,4 +28,7 @@
 #define TRUE 1
 #define FALSE 0
 
+int serial_read_string(int fd, char* string);
+int is_valid_string(const char* string, const int string_length);
+
 #endif /* __UTILS */
