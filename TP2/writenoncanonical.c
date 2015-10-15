@@ -19,11 +19,11 @@ int main(int argc, char** argv)
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS4\n");
       exit(1);
     }
-    
-    int fd = open(argv[1], O_RDWR | O_NOCTTY );
-    if (fd <0) {perror(argv[1]); exit(-1); }
 
-    llopen(fd,TRANSMITTER);
+    int port;
+    sscanf(argv[1],"/dev/ttyS%d",&port); 
+
+    int fd = llopen(port,TRANSMITTER);
 
     llclose(fd);
 
