@@ -23,10 +23,13 @@ int main(int argc, char** argv)
     int fd = open(argv[1], O_RDWR | O_NOCTTY );
     if (fd <0) {perror(argv[1]); exit(-1); }
 
+    printf("Opening port\n");
     llopen(fd,RECEIVER);
-
+    printf("Port open\n");
+   
+    printf("Closing port\n");
     llclose(fd);
-
+    printf("Port closed\n");
 
     return 0;
 }
