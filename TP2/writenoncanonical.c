@@ -11,8 +11,6 @@
 
 #include "linklayer.h"
 
-volatile int STOP=FALSE;
-
 int main(int argc, char** argv)
 {    
     if ( (argc < 2) || 

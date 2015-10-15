@@ -22,7 +22,7 @@ int llopen(int port, int flag){
 
 	/* Open the serial port for sending the message */
 
-    if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
+    if ( tcgetattr(port,&oldtio) == -1) { /* save current port settings */
       perror("tcgetattr");
       exit(-1);
     }
@@ -41,7 +41,7 @@ int llopen(int port, int flag){
     newtio.c_cc[VMIN]     = 5;   /* blocking read until 5 chars received */
 
 
-    tcflush(fd, TCIFLUSH);
+    tcflush(port, TCIFLUSH);
 
     if ( tcsetattr(fd,TCSANOW,&newtio) == -1) {
       perror("tcsetattr");
