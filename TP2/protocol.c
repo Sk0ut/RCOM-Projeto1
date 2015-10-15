@@ -27,6 +27,7 @@ int llopen(int port, int flag){
     if (fd <0) {perror(serial_name); return -1; }
 
 	/* Open the serial port for sending the message */
+    printf("Configuring port\n");
 
     if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
       perror("tcgetattr");
@@ -53,6 +54,7 @@ int llopen(int port, int flag){
       perror("tcsetattr");
       exit(-1);
     }
+    printf("Port configured\n");
 
 	if(flag == TRANSMITTER)
 		return llopen_transmitter(fd);
@@ -69,25 +71,41 @@ int llopen_transmitter(int fd){
 					SERIAL_C_SET,
 					SERIAL_A_COM_TRANSMITTER^SERIAL_C_SET,
 					SERIAL_FLAG};
+
+
+	printf("Transmitter open sequence\n");
+	printf("Sending SET\n");
 	write(fd,buffer,5);
+
+	printf("Reading from fd\n");
 	int length = serial_read_string(fd,ua);
+	printf("Validating string\n");
 	is_valid_string(ua,length);
-	if(ua[C_FLAG_INDEX] == SERIAL_C_UA) 
+	if(ua[C_FLAG_INDEX] == SERIAL_C_UA) {
+		printf("Received UA\n"); 
 		return fd;
-	else
+	}
+	else {
+		printf("Different string from UA\n");
 		return -1;
+	}
 }
 
 int llopen_receiver(int fd){
 	char set[MAX_STRING_SIZE];
+	printf("Receiver open sequence\n");
+	printf("Reading from port\n");
 	int length = serial_read_string(fd,set);
+	printf("Validating string\n");
 	is_valid_string(set,length);
 	if(set[C_FLAG_INDEX] == SERIAL_C_SET){
+		printf("Received SET\n");
 		char buffer[] = {SERIAL_FLAG,
 					SERIAL_A_COM_TRANSMITTER,
 					SERIAL_C_UA,
 					SERIAL_A_COM_TRANSMITTER^SERIAL_C_UA,
 					SERIAL_FLAG};
+		printf("Sending UA\n");
 		write(fd,buffer,5);
 		return fd;
 	}
@@ -95,9 +113,10 @@ int llopen_receiver(int fd){
 }
 
 int llclose(int fd){
+	printf("Restoring port configurations\n");
 	if (tcsetattr(fd,TCSANOW,&oldtio) == -1) {
-      perror("tcsetattr");
-      exit(-1);
+	      perror("tcsetattr");
+	      exit(-1);
     }
     close(fd);
 }

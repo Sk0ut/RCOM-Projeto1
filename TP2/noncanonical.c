@@ -19,14 +19,17 @@ int main(int argc, char** argv)
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS4\n");
       exit(1);
     }
-
+    
     int port;
     sscanf(argv[1],"/dev/ttyS%d",&port); 
 
+    printf("Opening port\n");
     int fd = llopen(port,RECEIVER);
-
+    printf("Port open\n");
+   
+    printf("Closing port\n");
     llclose(fd);
-
+    printf("Port closed\n");
 
     return 0;
 }
