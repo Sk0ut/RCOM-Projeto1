@@ -43,7 +43,7 @@ int llopen(int port, int flag){
 
     tcflush(port, TCIFLUSH);
 
-    if ( tcsetattr(fd,TCSANOW,&newtio) == -1) {
+    if ( tcsetattr(port,TCSANOW,&newtio) == -1) {
       perror("tcsetattr");
       exit(-1);
     }
