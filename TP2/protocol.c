@@ -27,18 +27,13 @@ static int read_valid_string(int fd, char *buf, int (*validator)(char *, int)) {
     tries = 0;
     signal(SIGALRM, sig_alarm_handler);
     while (tries < 3) {
+        
 		alarm(3);
 		while (1) {
             length = serial_read_string(fd,buf);
 			if (length == -1)
 				break;
 			printf("Validating string (size %d): \n", length);
-            int i;
-            for (i = 0; i < length; ++i)
-                printf("0x%x ", buf[i]);
-            printf("\n");
-            printf("is_valid: %d", is_valid_string(buf, length));
-            printf("validator: %d", validator(buf, length));
 
 			if(is_valid_string(buf,length) && validator(buf, length)) {
                 printf("Valid string\n"); 
@@ -91,6 +86,8 @@ int llopen(int port, int flag){
       exit(-1);
     }
     printf("Port configured\n");
+    
+    signal(SIGALRM, sig_alarm_handler);
 
 	if(flag == TRANSMITTER)
 		return llopen_transmitter(fd);
@@ -109,7 +106,7 @@ int set_validator (char* buffer, int length){
 }
 
 int llopen_transmitter(int fd){
-	char ua[MAX_STRING_SIZE];
+	char buf[MAX_STRING_SIZE];
 	char buffer[] = {SERIAL_FLAG,
 			SERIAL_A_COM_TRANSMITTER,
 			SERIAL_C_SET,
@@ -118,17 +115,41 @@ int llopen_transmitter(int fd){
 
 
 	printf("Transmitter open sequence\n");
-	printf("Sending SET\n");
-	write(fd,buffer,5);
 
 	printf("Reading from fd\n");
 	if (read_valid_string(fd, buffer, ua_validator) == -1)
         return -1;
     return fd;
+
+    int length;
+    tries = 0;
+    while (tries < 3) {
+        printf("Sending SET\n");
+    	write(fd,buffer,5);
+		alarm(3);
+		while (1) {
+            length = serial_read_string(fd,buf);
+			if (length == -1)
+				break;
+
+			printf("Validating string\n");
+			if(is_valid_string(buf,length) && ua_validator(buf, length)) {
+                printf("Valid string\n"); 
+                alarm(0);
+                break;
+	   		}
+        }
+        if (length != -1)
+            break;
+    }
+    if (tries == 3)    
+        return -1;
+
+    return fd;
 }
 
 int llopen_receiver(int fd){
-	char set[MAX_STRING_SIZE];
+	char buf[MAX_STRING_SIZE];
 	printf("Receiver open sequence\n");
 	printf("Reading from port\n");
 
@@ -138,9 +159,15 @@ int llopen_receiver(int fd){
 			    SERIAL_A_ANS_RECEIVER^SERIAL_C_UA,
 			    SERIAL_FLAG};
 
-   
-    if(read_valid_string(fd,set,set_validator) == -1)
-        return -1;
+    int length;
+    while (1) {
+        length = serial_read_string(fd,buf);
+        if (length <= 0)
+            continue;        
+        printf("Validating string\n");
+	    if(is_valid_string(buf,length) && set_validator(buf, length))
+           break;
+    }
 
     write(fd, ua, 5);
     return fd;

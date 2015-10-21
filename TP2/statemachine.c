@@ -10,20 +10,27 @@ int is_valid_i(const char* string, int string_length);
 int serial_read_string(int fd, char* string){
 	int length = 0;
 	char c;
+	int res;
 
 	do{
-		read(fd, &c, 1);
+		res = read(fd, &c, 1);
+		if (res == 0)
+			return -1;
 	} while(c != SERIAL_FLAG);
 
 	while (length < 3)
 	{	
 		length = 0;
-		read(fd, &c, 1);
+        res = read(fd, &c, 1);
+		if (res == 0)
+			return -1;
 		
 		while(length < MAX_STRING_SIZE && c != SERIAL_FLAG){
 			string[length] = c;
 			++length;
-			read(fd, &c, 1);
+            res = read(fd, &c, 1);
+    		if (res == 0)
+	    		return -1;
 		}
 	} 
 
