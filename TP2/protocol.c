@@ -32,11 +32,20 @@ static int read_valid_string(int fd, char *buf, int (*validator)(char *, int)) {
             length = serial_read_string(fd,buf);
 			if (length == -1)
 				break;
-			printf("Validating string\n");
-			if(is_valid_string(buf,length) && validator(buf, length)) { 
+			printf("Validating string (size %d): \n", length);
+            int i;
+            for (i = 0; i < length; ++i)
+                printf("0x%x ", buf[i]);
+            printf("\n");
+            printf("is_valid: %d", is_valid_string(buf, length));
+            printf("validator: %d", validator(buf, length));
+
+			if(is_valid_string(buf,length) && validator(buf, length)) {
+                printf("Valid string\n"); 
                 alarm(0);
 				return length;
-			}
+	   		}
+        printf("Non valid string\n"); 
         }
     }
     
