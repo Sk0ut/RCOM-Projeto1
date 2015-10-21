@@ -25,7 +25,11 @@ int main(int argc, char** argv)
     sscanf(argv[1],"/dev/ttyS%d",&port); 
 
     int fd = llopen(port,TRANSMITTER);
-
+    if (fd == -1) {
+        printf("Unable to connect\n");
+        return -1;    
+    }
+	
     llclose(fd);
 
 

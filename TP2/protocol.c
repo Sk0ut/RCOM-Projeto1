@@ -18,8 +18,11 @@
 static struct termios oldtio;
 static int tries;
 
-void sig_alarm_handler() {
-    ++tries;
+void sig_alarm_handler(int sig) {
+    if (sig == SIGALRM) {
+        printf("Alarm!\n");
+        ++tries;
+    }
 }
 
 int llopen(int port, int flag){
@@ -51,7 +54,7 @@ int llopen(int port, int flag){
     newtio.c_lflag = 0;
 
     newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 5;   /* blocking read until 5 chars received */
+    newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
 
 
     tcflush(fd, TCIFLUSH);
@@ -62,7 +65,15 @@ int llopen(int port, int flag){
     }
     printf("Port configured\n");
     
-    signal(SIGALRM, sig_alarm_handler);
+    struct sigaction sa;
+    sa.sa_flags = 0;
+    sa.sa_handler = sig_alarm_handler;
+    if (sigaction(SIGALRM, &sa, NULL) == -1) {
+        perror("Error: cannot handle SIGALRM");
+        return -1;
+    }
+    
+    //signal(SIGALRM, sig_alarm_handler);
 
 	if(flag == TRANSMITTER)
 		return llopen_transmitter(fd);

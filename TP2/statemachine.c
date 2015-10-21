@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <stdio.h>
 
 int is_valid_s_u(const char* string);
 int is_a_flag(const char a);
@@ -13,8 +14,9 @@ int serial_read_string(int fd, char* string){
 	int res;
 
 	do{
+        printf("Reading from port\n");
 		res = read(fd, &c, 1);
-		if (res == 0)
+		if (res <= 0)
 			return -1;
 	} while(c != SERIAL_FLAG);
 
@@ -22,14 +24,14 @@ int serial_read_string(int fd, char* string){
 	{	
 		length = 0;
         res = read(fd, &c, 1);
-		if (res == 0)
+		if (res <= 0)
 			return -1;
 		
 		while(length < MAX_STRING_SIZE && c != SERIAL_FLAG){
 			string[length] = c;
 			++length;
             res = read(fd, &c, 1);
-    		if (res == 0)
+    		if (res <= 0)
 	    		return -1;
 		}
 	} 
