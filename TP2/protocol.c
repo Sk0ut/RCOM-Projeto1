@@ -135,7 +135,7 @@ int llopen_receiver(int fd){
     char ua[] = {SERIAL_FLAG,
 		    	SERIAL_A_ANS_RECEIVER,
 			    SERIAL_C_UA,
-			    SERIAL_A_COM_RECEIVER^SERIAL_C_UA,
+			    SERIAL_A_ANS_RECEIVER^SERIAL_C_UA,
 			    SERIAL_FLAG};
 
    
