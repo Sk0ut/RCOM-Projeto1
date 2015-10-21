@@ -22,31 +22,6 @@ void sig_alarm_handler() {
     ++tries;
 }
 
-static int read_valid_string(int fd, char *buf, int (*validator)(char *, int)) {
-    int length;
-    tries = 0;
-    signal(SIGALRM, sig_alarm_handler);
-    while (tries < 3) {
-        
-		alarm(3);
-		while (1) {
-            length = serial_read_string(fd,buf);
-			if (length == -1)
-				break;
-			printf("Validating string (size %d): \n", length);
-
-			if(is_valid_string(buf,length) && validator(buf, length)) {
-                printf("Valid string\n"); 
-                alarm(0);
-				return length;
-	   		}
-        printf("Non valid string\n"); 
-        }
-    }
-    
-    return -1;
-}
-
 int llopen(int port, int flag){
 
     struct termios newtio;
@@ -115,11 +90,6 @@ int llopen_transmitter(int fd){
 
 
 	printf("Transmitter open sequence\n");
-
-	printf("Reading from fd\n");
-	if (read_valid_string(fd, buffer, ua_validator) == -1)
-        return -1;
-    return fd;
 
     int length;
     tries = 0;
