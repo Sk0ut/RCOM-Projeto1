@@ -9,12 +9,39 @@
 #include <stdlib.h>
 #include <strings.h>
 #include <string.h>
+#include <signal.h>
 
 #define BAUDRATE B38400
 #define MODEMDEVICE "/dev/ttyS"
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 
 static struct termios oldtio;
+static int tries;
+
+void sig_alarm_handler() {
+    ++tries;
+}
+
+static int read_valid_string(int fd, char *buf, int (*validator)(char *, int)) {
+    int length;
+    tries = 0;
+    signal(SIGALRM, sig_alarm_handler);
+    while (tries < 3) {
+		alarm(3);
+		while (1) {
+            length = serial_read_string(fd,buf);
+			if (length == -1)
+				break;
+			printf("Validating string\n");
+			if(is_valid_string(buf,length) && validator(buf, length)) { 
+                alarm(0);
+				return length;
+			}
+        }
+    }
+    
+    return -1;
+}
 
 int llopen(int port, int flag){
 
@@ -64,13 +91,21 @@ int llopen(int port, int flag){
 		return -1;
 }
 
+int ua_validator (char* buffer, int length){
+    return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_UA);
+}
+
+int set_validator (char* buffer, int length){
+    return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_SET);
+}
+
 int llopen_transmitter(int fd){
 	char ua[MAX_STRING_SIZE];
 	char buffer[] = {SERIAL_FLAG,
-					SERIAL_A_COM_TRANSMITTER,
-					SERIAL_C_SET,
-					SERIAL_A_COM_TRANSMITTER^SERIAL_C_SET,
-					SERIAL_FLAG};
+			SERIAL_A_COM_TRANSMITTER,
+			SERIAL_C_SET,
+			SERIAL_A_COM_TRANSMITTER^SERIAL_C_SET,
+			SERIAL_FLAG};
 
 
 	printf("Transmitter open sequence\n");
@@ -78,38 +113,28 @@ int llopen_transmitter(int fd){
 	write(fd,buffer,5);
 
 	printf("Reading from fd\n");
-	int length = serial_read_string(fd,ua);
-	printf("Validating string\n");
-	is_valid_string(ua,length);
-	if(ua[C_FLAG_INDEX] == SERIAL_C_UA) {
-		printf("Received UA\n"); 
-		return fd;
-	}
-	else {
-		printf("Different string from UA\n");
-		return -1;
-	}
+	if (read_valid_string(fd, buffer, ua_validator) == -1)
+        return -1;
+    return fd;
 }
 
 int llopen_receiver(int fd){
 	char set[MAX_STRING_SIZE];
 	printf("Receiver open sequence\n");
 	printf("Reading from port\n");
-	int length = serial_read_string(fd,set);
-	printf("Validating string\n");
-	is_valid_string(set,length);
-	if(set[C_FLAG_INDEX] == SERIAL_C_SET){
-		printf("Received SET\n");
-		char buffer[] = {SERIAL_FLAG,
-					SERIAL_A_COM_TRANSMITTER,
-					SERIAL_C_UA,
-					SERIAL_A_COM_TRANSMITTER^SERIAL_C_UA,
-					SERIAL_FLAG};
-		printf("Sending UA\n");
-		write(fd,buffer,5);
-		return fd;
-	}
-	else return -1;
+
+    char ua[] = {SERIAL_FLAG,
+		    	SERIAL_A_ANS_RECEIVER,
+			    SERIAL_C_UA,
+			    SERIAL_A_COM_RECEIVER^SERIAL_C_UA,
+			    SERIAL_FLAG};
+
+   
+    if(read_valid_string(fd,set,set_validator) == -1)
+        return -1;
+
+    write(fd, ua, 5);
+    return fd;
 }
 
 int llclose(int fd){
