@@ -17,7 +17,7 @@
 #define SERIAL_C_RR_N0 0x01
 #define SERIAL_C_REJ 0x25
 #define SERIAL_I_C_N0	0x00
-#define SERIAL_I_C_N1	0x20
+#define SERIAL_I_C_N1	0x2
 
 #define SERIAL_SU_STRING_SIZE	5
 #define MAX_STRING_SIZE	255
