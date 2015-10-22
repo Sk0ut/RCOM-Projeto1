@@ -13,8 +13,11 @@
 #define SERIAL_C_SET 0x07
 #define SERIAL_C_DISC 0x0B
 #define SERIAL_C_UA 0x03
-#define SERIAL_C_RR 0x21
+#define SERIAL_C_RR_N1 0x21
+#define SERIAL_C_RR_N0 0x01
 #define SERIAL_C_REJ 0x25
+#define SERIAL_I_C_N0	0x00
+#define SERIAL_I_C_N1	0x20
 
 #define SERIAL_SU_STRING_SIZE	5
 #define MAX_STRING_SIZE	255
@@ -24,6 +27,9 @@
 #define BCC_FLAG_INDEX 	2
 
 #define C_FLAG_R_VALUE	(1<<5)
+
+#define RR0	0
+#define RR1 1
 
 #define TRUE 1
 #define FALSE 0
