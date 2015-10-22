@@ -30,7 +30,7 @@ int main(int argc, char** argv)
         return -1;    
     }
 	
-    llclose(fd);
+    llclose(fd, TRANSMITTER);
 
 
     return 0;

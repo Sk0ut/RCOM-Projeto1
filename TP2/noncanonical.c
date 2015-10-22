@@ -29,7 +29,7 @@ int main(int argc, char** argv)
     printf("Port open\n");
    
     printf("Closing port\n");
-    llclose(fd);
+    llclose(fd, RECEIVER);
     printf("Port closed\n");
 
     return 0;

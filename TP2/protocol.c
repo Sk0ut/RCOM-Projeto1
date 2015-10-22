@@ -91,6 +91,10 @@ int set_validator (char* buffer, int length){
     return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_SET);
 }
 
+int disc_validator (char* buffer, int length){
+    return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_DISC);
+}
+
 int llopen_transmitter(int fd){
 	char buf[MAX_STRING_SIZE];
 	char buffer[] = {SERIAL_FLAG,
@@ -154,7 +158,94 @@ int llopen_receiver(int fd){
     return fd;
 }
 
-int llclose(int fd){
+int llclose_transmitter(int fd){
+	char buf[MAX_STRING_SIZE];
+    char disc[] = {SERIAL_FLAG,
+		    	SERIAL_A_ANS_RECEIVER,
+			    SERIAL_C_DISC,
+			    SERIAL_A_ANS_RECEIVER^SERIAL_C_DISC,
+			    SERIAL_FLAG};
+
+    char ua[] = {SERIAL_FLAG,
+		    	SERIAL_A_ANS_RECEIVER,
+			    SERIAL_C_UA,
+			    SERIAL_A_ANS_RECEIVER^SERIAL_C_UA,
+			    SERIAL_FLAG};
+  
+    int length;
+    tries = 0;
+    while (tries < 3) {
+        printf("Sending DISC\n");
+    	write(fd,disc,5);
+		alarm(3);
+		while (1) {
+            length = serial_read_string(fd,buf);
+			if (length == -1)
+				break;
+
+			printf("Validating string\n");
+			if(is_valid_string(buf,length) && disc_validator(buf, length)) {
+                printf("Valid string\n"); 
+                alarm(0);
+                break;
+	   		}
+        }
+        if (length != -1)
+            break;
+    }
+
+    if (tries == 3)    
+        return -1;
+
+    write(fd, ua, 5);
+    return fd;
+}
+
+int llclose_receiver(int fd){
+	char buf[MAX_STRING_SIZE];
+	char disc[] = {SERIAL_FLAG,
+		    	SERIAL_A_ANS_RECEIVER,
+			    SERIAL_C_DISC,
+			    SERIAL_A_ANS_RECEIVER^SERIAL_C_DISC,
+			    SERIAL_FLAG};
+
+	/* Recepcao do DISC */
+
+	//TODO: Fazer uma funcao deste ciclo
+	int length;
+	while (1) {
+        length = serial_read_string(fd,buf);
+        if (length <= 0)
+            continue;        
+        printf("Validating string\n");
+	    if(is_valid_string(buf,length) && disc_validator(buf, length))
+           break;
+    }
+
+    /* Envio do DISC */
+    write(fd,disc,5);
+
+    /* Recepcao do UA */
+    /* Nota:  infinto àn Debater com a professora ciclo infinto à espera do UA*/
+    while (1) {
+        length = serial_read_string(fd,buf);
+        if (length <= 0)
+            continue;        
+        printf("Validating string\n");
+	    if(is_valid_string(buf,length) && ua_validator(buf, length))
+           break;
+    }
+
+	return fd;
+}
+
+int llclose(int fd, int flag){
+	if(flag == TRANSMITTER)
+		llclose_transmitter(fd);
+	else if (flag == RECEIVER)
+		llclose_receiver(fd);
+	else
+		return -1;
 	printf("Restoring port configurations\n");
 	if (tcsetattr(fd,TCSANOW,&oldtio) == -1) {
 	      perror("tcsetattr");

@@ -5,6 +5,6 @@
 #define RECEIVER 1
 
 int llopen(int port, int flag);
-int llclose(int fd);
+int llclose(int fd, int flag);
 
 #endif // __LINKLAYER
