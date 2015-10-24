@@ -41,17 +41,17 @@ int llopen(int port, int flag){
     if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
     perror("tcgetattr");
     return -1;
-}
+	}
 
-bzero(&newtio, sizeof(newtio));
+	bzero(&newtio, sizeof(newtio));
 
-    /* 	Control, input, output flags */
-    newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD; /*  */
-newtio.c_iflag = IGNPAR;
-newtio.c_oflag = OPOST;
+		/* 	Control, input, output flags */
+		newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD; /*  */
+	newtio.c_iflag = IGNPAR;
+	newtio.c_oflag = OPOST;
 
-    /* set input mode (non-canonical, no echo,...) */
-newtio.c_lflag = 0;
+		/* set input mode (non-canonical, no echo,...) */
+	newtio.c_lflag = 0;
 
     newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
     newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
