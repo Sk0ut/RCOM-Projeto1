@@ -157,13 +157,10 @@ int read_frame(LinkLayer link_layer) {
 	int res;
 
 	do {
-	        printf("Reading from port\n");
+        printf("Reading from port\n");
 		res = read(link_layer->fd, &c, 1);
-		if (res < 1) {
-			printf("Read failed\n");
+		if (res < 1)
 			return -1;
-		}
-		printf("Read: 0x%x\n", c);	
 	} while(c != SERIAL_FLAG);
 
 	while (length < 3) {	
@@ -213,7 +210,7 @@ int write_frame(LinkLayer link_layer, char* buffer, unsigned int length) {
 	/* Byte stuffing */
 		
 	for(i = 0; i < length; ++i) {
-		switch(buffer[i]) {
+		 switch(buffer[i]) {
             case SERIAL_FLAG:
             c = SERIAL_ESCAPE;
             if(write(link_layer->fd, &c,1) < 1)
@@ -235,14 +232,13 @@ int write_frame(LinkLayer link_layer, char* buffer, unsigned int length) {
             	return ret;
             break;
         }
+        printf("Wrote: %x\n", buffer[i]);
         ++ret;
 	}
 	
 	c = SERIAL_FLAG;
 	if(write(link_layer->fd,&c,1) < 1)
 		return -1;
-
-	printf("Message sent\n");
 
 	return ret;
 }
@@ -274,11 +270,12 @@ LinkLayer llinit(int port, int flag, unsigned int baudrate, unsigned int max_tri
 	/* set input mode (non-canonical, no echo,...) */
 	newtio.c_lflag = 0;
 
-    	newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    	newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
+    newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
+    newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
 
 
-	tcflush(fd, TCIOFLUSH);
+	if(tcflush(fd, TCIFLUSH) != 0)
+		return NULL;
 
 	if ( tcsetattr(fd,TCSANOW,&newtio) == -1) {
   		perror("tcsetattr");
@@ -297,6 +294,9 @@ LinkLayer llinit(int port, int flag, unsigned int baudrate, unsigned int max_tri
 	}
 
 	LinkLayer link_layer = malloc(sizeof(struct LinkLayer_t));
+
+	if(link_layer == NULL)
+		return NULL;
 	
 	link_layer->fd = fd;
 	link_layer->flag = flag;
@@ -307,6 +307,11 @@ LinkLayer llinit(int port, int flag, unsigned int baudrate, unsigned int max_tri
 	link_layer->sequence_number = 0;
 	link_layer->buffer = malloc((max_frame_size-2)*sizeof(char));
 	link_layer->oldtio = oldtio;
+
+	if(link_layer->buffer == NULL){
+		free(link_layer);
+		return NULL;
+	}
 	
 	return link_layer;
 }
@@ -357,6 +362,7 @@ int llopen_transmitter(LinkLayer link_layer) {
 int llopen_receiver(LinkLayer link_layer) {
 	char buf[MAX_STRING_SIZE];
 	printf("Receiver open sequence\n");
+	printf("Reading from port\n");
 
     char ua[] = {SERIAL_A_ANS_RECEIVER,
        SERIAL_C_UA,
