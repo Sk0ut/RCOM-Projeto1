@@ -365,7 +365,6 @@ int llopen_transmitter(LinkLayer link_layer) {
 }
 
 int llopen_receiver(LinkLayer link_layer) {
-	char buf[MAX_STRING_SIZE];
 	printf("Receiver open sequence\n");
 	printf("Reading from port\n");
 
@@ -379,7 +378,7 @@ int llopen_receiver(LinkLayer link_layer) {
         if (length <= 0)
             continue;        
         printf("Validating string\n");
-        if(is_valid_string(buf,length) && set_validator(buf, length))
+        if(is_valid_string(link_layer->buffer,length) && set_validator(link_layer->buffer, length))
            break;
    }
 
