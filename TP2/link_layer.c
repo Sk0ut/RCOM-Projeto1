@@ -462,8 +462,7 @@ int llclose_receiver(LinkLayer link_layer) {
         if(is_valid_string(link_layer->buffer,length) && disc_validator(link_layer->buffer, length))
            break;
     }
-
-    int length;
+	
     reset_alarm();
     while (tries < link_layer->max_tries) {
     printf("Sending DISC\n");
