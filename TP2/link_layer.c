@@ -362,7 +362,6 @@ int llopen_transmitter(LinkLayer link_layer) {
 int llopen_receiver(LinkLayer link_layer) {
 	char buf[MAX_STRING_SIZE];
 	printf("Receiver open sequence\n");
-	printf("Reading from port\n");
 
     char ua[] = {SERIAL_A_ANS_RECEIVER,
        SERIAL_C_UA,
@@ -383,14 +382,14 @@ int llopen_receiver(LinkLayer link_layer) {
 }
 
 int llclose(LinkLayer link_layer){
-	/*
+	
 	if(link_layer->flag == TRANSMITTER)
 		llclose_transmitter(link_layer);
 	else if (link_layer->flag == RECEIVER)
 		llclose_receiver(link_layer);
 	else
 		return -1;
-	*/
+	
 	printf("Restoring port configurations\n");
 	if (tcsetattr(link_layer->fd,TCSANOW,&(link_layer->oldtio)) == -1) {
        perror("tcsetattr");
@@ -401,14 +400,52 @@ int llclose(LinkLayer link_layer){
    return 0;
 }
 
+int llclose_transmitter(LinkLayer link_layer){
+    char disc[] = {SERIAL_A_COM_TRANSMITTER,
+        SERIAL_C_DISC,
+        SERIAL_A_COM_TRANSMITTER^SERIAL_C_DISC};
+
+    char ua[] = {
+        SERIAL_A_ANS_RECEIVER,
+        SERIAL_C_UA,
+        SERIAL_A_ANS_RECEIVER^SERIAL_C_UA,
+    };
+
+    int length;
+    reset_alarm();
+    while (tries < link_layer->max_tries) {
+    printf("Sending DISC\n");
+    write_frame(link_layer,disc,3);
+    alarm(3);
+    while (1) {
+        length = read_frame(link_layer);
+        if (length <= 0)
+            break;
+
+        printf("Validating string\n");
+        if(is_valid_string(link_layer->buffer,length) && disc_validator(link_layer->buffer, length)) {
+            printf("Valid string\n"); 
+            alarm(0);
+            break;
+        }
+    }
+    if (length != -1)
+        break;
+    }
+
+    if (tries == link_layer->max_tries)    
+        return -1;
+
+    write_frame(link_layer, ua, 3);
+    return 0;
+}
+
+
 
 int llclose_receiver(LinkLayer link_layer) {
-     char buf[MAX_STRING_SIZE];
-     char disc[] = {SERIAL_FLAG,
-       SERIAL_A_ANS_RECEIVER,
+     char disc[] = {SERIAL_A_ANS_RECEIVER,
        SERIAL_C_DISC,
-       SERIAL_A_ANS_RECEIVER^SERIAL_C_DISC,
-       SERIAL_FLAG};
+       SERIAL_A_ANS_RECEIVER^SERIAL_C_DISC};
 
 	/* Recepcao do DISC */
 
@@ -418,23 +455,35 @@ int llclose_receiver(LinkLayer link_layer) {
         if (length <= 0)
             continue;        
         printf("Validating string\n");
-        if(is_valid_string(buf,length) && disc_validator(buf, length))
+        if(is_valid_string(link_layer->buffer,length) && disc_validator(link_layer->buffer, length))
            break;
     }
 
-    /* Envio do DISC */
-    write_frame(link_layer,disc,5);
-
-    /* Recepcao do UA */
-    /* Nota:  infinto àn Debater com a professora ciclo infinto à espera do UA*/
+    int length;
+    reset_alarm();
+    while (tries < link_layer->max_tries) {
+    printf("Sending DISC\n");
+    write_frame(link_layer,disc,3);
+    alarm(3);
     while (1) {
         length = read_frame(link_layer);
         if (length <= 0)
-            continue;        
+            break;
+
         printf("Validating string\n");
-        if(is_valid_string(buf,length) && ua_validator(buf, length))
-        break;
+        if(is_valid_string(link_layer->buffer,length) && ua_validator(link_layer->buffer, length)) {
+            printf("Valid string\n"); 
+            alarm(0);
+            break;
+        }
+	}
+   	if (length != -1)
+    	break;
     }
+
+    if (tries == link_layer->max_tries)    
+        return -1;
+
 
     return 0;
 }
