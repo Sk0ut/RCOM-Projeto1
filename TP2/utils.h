@@ -30,6 +30,8 @@
 
 #define RR0	0
 #define RR1 1
+#define I0 1
+#define I1 2
 
 #define TRUE 1
 #define FALSE 0

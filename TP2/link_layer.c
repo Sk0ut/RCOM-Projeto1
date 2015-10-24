@@ -91,7 +91,7 @@ int is_valid_combination(const char a, const char c){
 	return TRUE;
 }
 
-/* Validates I String*/
+/* Validates I String. Returns whether it is a I0 or I1 frame */
 /* TODO: Perguntar ao Flavinho se ele nao se importa de adicionar aqui um argumento para validar se e um i0/i1 correto tambem,
 ou se prefere fazer de outra forma */
 int is_valid_i(const char* string, int string_length){
@@ -110,10 +110,17 @@ int is_valid_i(const char* string, int string_length){
 		return FALSE;
 	}
 
-	/* TODO: Validacao de data */
-	/* TODO: Bcc2, perguntar a prof como fazer*/
+	int iCounter;
+	char bcc2 = string[0];
+	for(iCounter=1; iCounter < string_length-4; iCounter++)
+		bcc2 ^= string[iCounter];
 
-	return TRUE;
+	if(bcc2 != string[string_length-1])
+		return FALSE;
+
+	if(string[C_FLAG_INDEX] == SERIAL_I_C_N0)
+		return I0;
+	else return I1;
 }
 
 int ua_validator (char* buffer, int length){
@@ -322,7 +329,6 @@ LinkLayer llinit(int port, int flag, unsigned int baudrate, unsigned int max_tri
 }
 
 int llopen(LinkLayer link_layer){
-    //signal(SIGALRM, sig_alarm_handler);
 	if(link_layer->flag == TRANSMITTER)
   		return llopen_transmitter(link_layer);
 	else if (link_layer->flag == RECEIVER)
@@ -444,15 +450,8 @@ int llclose_transmitter(LinkLayer link_layer){
     return 0;
 }
 
-
-
 int llclose_receiver(LinkLayer link_layer) {
-     char disc[] = {SERIAL_A_ANS_RECEIVER,
-       SERIAL_C_DISC,
-       SERIAL_A_ANS_RECEIVER^SERIAL_C_DISC};
-
-	/* Recepcao do DISC */
-
+    char disc[] = {SERIAL_A_ANS_RECEIVER, SERIAL_C_DISC, SERIAL_A_ANS_RECEIVER^SERIAL_C_DISC};
     int length;
     while (1) {
         length = read_frame(link_layer);
@@ -491,8 +490,95 @@ int llclose_receiver(LinkLayer link_layer) {
     return 0;
 }
 
-unsigned int get_max_message_size(LinkLayer link_layer) {
-	return link_layer->max_frame_size - 6;
+int llread(LinkLayer link_layer){
+	int iType;
+	int length;
+
+    while (1) {
+        length = read_frame(link_layer);
+        if (length <= 0)
+            continue;        
+        printf("Validating string\n");
+        if(is_valid_string(link_layer->buffer,length) && (iType=is_valid_i(link_layer->buffer, length)))
+           break;
+   	}
+
+   	char* rr = malloc(sizeof(char) * 3);
+
+   	rr[0] = SERIAL_A_ANS_RECEIVER;
+   	if(iType == I0){
+   		rr[1] = SERIAL_C_RR_N1;
+   		rr[2] = SERIAL_A_ANS_RECEIVER^SERIAL_C_RR_N1;
+   	}
+
+   	else{
+		rr[1] = SERIAL_C_RR_N0;
+   		rr[2] = SERIAL_A_ANS_RECEIVER^SERIAL_C_RR_N0;
+   	}
+
+   	write_frame(link_layer,rr,5);
+
+   	return 5;
+}
+
+int llwrite(LinkLayer link_layer, char* buf, int length, int iFlag){
+
+	int iLength = length+4;
+	int ret = 0;
+	char* i = malloc(sizeof(char)*(iLength));
+
+	i[0] = SERIAL_A_COM_TRANSMITTER;
+	if(iFlag = I0){
+		i[1] = SERIAL_I_C_N0;
+		i[2] = SERIAL_A_COM_TRANSMITTER ^ SERIAL_I_C_N0;
+	}
+	else{
+		i[1] = SERIAL_I_C_N1;
+		i[2] = SERIAL_A_COM_TRANSMITTER ^ SERIAL_I_C_N1;
+	}
+
+	i[3] = buf[0];
+
+	int bufCounter;
+	char bcc2 = buf[0];
+
+	for(bufCounter = 1; bufCounter < length; bufCounter++){
+		i[3+bufCounter] = buf[bufCounter];
+		bcc2^=buf[bufCounter];
+	}
+
+	i[length-1] = bcc2;
+
+	int rrType, rrLength;
+    if(iFlag == I0)
+    	rrType = RR1;
+    else
+    	rrType = RR0;
+	
+	reset_alarm();
+    while (tries < link_layer->max_tries) {
+    	printf("Sending I string\n");
+   		write_frame(link_layer,i,3);
+    	alarm(3);
+    	while (1) {
+        	rrLength = read_frame(link_layer);
+        	if (rrLength <= 0)
+            	break;
+        	printf("Validating string\n");
+        	if(is_valid_string(link_layer->buffer,length) && rr_validator(link_layer->buffer, rrLength, rrType)) {
+            	printf("Valid string\n"); 
+            	alarm(0);
+            	break;
+        	}
+		}
+   		if (rrLength != -1)
+    		break;
+   	}
+
+   	if (tries == link_layer->max_tries)    
+       	return -1;
+
+    return iLength;
 }
 
 void lldelete(LinkLayer link_layer) {
@@ -501,4 +587,8 @@ void lldelete(LinkLayer link_layer) {
 			free(link_layer->buffer);
 		free(link_layer);
 	}
+}
+
+unsigned int get_max_message_size(LinkLayer link_layer) {
+	return link_layer->max_frame_size - 6;
 }
