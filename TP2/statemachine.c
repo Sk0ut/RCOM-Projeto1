@@ -8,37 +8,6 @@ int is_valid_bcc(const char a, const char c, const char bcc);
 int is_valid_combination(const char a, const char c);
 int is_valid_i(const char* string, int string_length);
 
-int serial_read_string(int fd, char* string){
-	int length = 0;
-	char c;
-	int res;
-
-	do{
-        printf("Reading from port\n");
-		res = read(fd, &c, 1);
-		if (res <= 0)
-			return -1;
-	} while(c != SERIAL_FLAG);
-
-	while (length < 3)
-	{	
-		length = 0;
-        res = read(fd, &c, 1);
-		if (res <= 0)
-			return -1;
-		
-		while(length < MAX_STRING_SIZE && c != SERIAL_FLAG){
-			string[length] = c;
-			++length;
-            res = read(fd, &c, 1);
-    		if (res <= 0)
-	    		return -1;
-		}
-	} 
-
-	return length;
-}
-
 /* Validates string */
 int is_valid_string(const char* string, const int string_length){
 	if(string_length == 3){

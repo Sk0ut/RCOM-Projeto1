@@ -10,9 +10,9 @@
 #include <string.h>
 
 #include "linklayer.h"
+#define BAUDRATE B38400
 
-int main(int argc, char** argv)
-{    
+int main(int argc, char** argv) {    
     if ( (argc < 2) || 
          ((strcmp("/dev/ttyS0", argv[1])!=0) && 
           (strcmp("/dev/ttyS4", argv[1])!=0) &&
@@ -24,12 +24,17 @@ int main(int argc, char** argv)
     int port;
     sscanf(argv[1],"/dev/ttyS%d",&port); 
 
-    printf("Opening port\n");
-    int fd = llopen(port,RECEIVER);
+    LinkLayer link_layer = llinit(port, RECEIVER, BAUDRATE, 3, 3, MAX_STRING_SIZE);
+    if(linklayer == NULL)
+      return 1;
+
+    if (llopen(link_layer) == -1)
+      return 1;
     printf("Port open\n");
    
     printf("Closing port\n");
-    llclose(fd, RECEIVER);
+    if (llclose(link_layer))
+      return 1;
     printf("Port closed\n");
 
     return 0;
