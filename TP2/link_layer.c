@@ -181,7 +181,7 @@ int read_frame(LinkLayer link_layer) {
 	                if(c == SERIAL_FLAG_REPLACE)
 	                    link_layer->buffer[length] = SERIAL_FLAG;
 	                else if(c == SERIAL_ESCAPE_REPLACE)
-	                    link_layer->buffer[length] == SERIAL_ESCAPE;
+	                    link_layer->buffer[length] = SERIAL_ESCAPE;
 	                else
 	                	return -1;
 	            	break;
