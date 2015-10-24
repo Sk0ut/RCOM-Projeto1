@@ -92,8 +92,6 @@ int is_valid_combination(const char a, const char c){
 }
 
 /* Validates I String. Returns whether it is a I0 or I1 frame */
-/* TODO: Perguntar ao Flavinho se ele nao se importa de adicionar aqui um argumento para validar se e um i0/i1 correto tambem,
-ou se prefere fazer de outra forma */
 int is_valid_i(const char* string, int string_length){
 	if(string_length < 5) //Pressupoe que e mandado pelo menos 1 byte de data
 		return FALSE;
