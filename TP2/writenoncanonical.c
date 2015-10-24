@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     sscanf(argv[1],"/dev/ttyS%d",&port); 
 
     LinkLayer link_layer = llinit(port, TRANSMITTER, BAUDRATE, 3, 3, MAX_STRING_SIZE);
-    if(linklayer == NULL)
+    if(link_layer == NULL)
       return 1;
 
     if (llopen(link_layer) == -1)

@@ -3,13 +3,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <termios.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <string.h>
+#include <termios.h>
 
+#include "utils.h"
 #include "linklayer.h"
+
 #define BAUDRATE B38400
 
 int main(int argc, char** argv) {    
@@ -25,7 +27,7 @@ int main(int argc, char** argv) {
     sscanf(argv[1],"/dev/ttyS%d",&port); 
 
     LinkLayer link_layer = llinit(port, RECEIVER, BAUDRATE, 3, 3, MAX_STRING_SIZE);
-    if(linklayer == NULL)
+    if(link_layer == NULL)
       return 1;
 
     if (llopen(link_layer) == -1)

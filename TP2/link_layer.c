@@ -1,6 +1,22 @@
 #include "linklayer.h"
+#include "utils.h"
+
+#include <unistd.h>
+#include <signal.h>
+#include <termios.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <string.h>
+#include <stdlib.h>
 
 static int tries;
+
+int is_valid_s_u(const char* string);
+int is_a_flag(const char a);
+int is_c_flag(const char c);
+int is_valid_bcc(const char a, const char c, const char bcc);
+int is_valid_combination(const char a, const char c);
+int is_valid_i(const char* string, int string_length);
 
 struct LinkLayer_t {
 	int fd;
@@ -13,6 +29,116 @@ struct LinkLayer_t {
 	unsigned int sequence_number;
 	char* buffer;
 };
+
+/* Validates string */
+int is_valid_string(const char* string, const int string_length){
+	if(string_length == 3){
+		return is_valid_s_u(string);
+	}
+	else {
+		return is_valid_i(string, string_length);
+	}
+}
+
+/* Validates su flag*/
+int is_valid_s_u(const char* string){
+	if(!is_a_flag(string[A_FLAG_INDEX])){
+		return FALSE;
+	}
+
+	if(!is_c_flag(string[C_FLAG_INDEX])){
+		return FALSE;
+	}
+
+	if(!is_valid_bcc(string[A_FLAG_INDEX],string[C_FLAG_INDEX], string[BCC_FLAG_INDEX])){
+		return FALSE;
+	}
+
+	return is_valid_combination(string[A_FLAG_INDEX], string[C_FLAG_INDEX]);
+}
+
+/* Validates a flag */
+int is_a_flag(const char a){
+	switch(a){
+		case SERIAL_A_COM_TRANSMITTER:
+		case SERIAL_A_COM_RECEIVER:
+			return TRUE;
+		default:
+			return FALSE;
+	}
+}
+
+/* Validates c flag */
+int is_c_flag(const char c){
+	switch(c){
+		case SERIAL_C_SET:
+		case SERIAL_C_DISC:
+		case SERIAL_C_UA:
+			return TRUE;
+		default:
+			return (c|C_FLAG_R_VALUE)==SERIAL_C_RR_N0 || (c|C_FLAG_R_VALUE)==SERIAL_C_RR_N1 ||
+					(c|C_FLAG_R_VALUE)==SERIAL_C_REJ;
+	}
+}
+
+/* Validates BCC Flag */
+int is_valid_bcc(const char a, const char c, const char bcc){
+	return (a^c) == bcc;
+}
+
+/* Validates the string */
+int is_valid_combination(const char a, const char c){
+	return TRUE;
+}
+
+/* Validates I String*/
+/* TODO: Perguntar ao Flavinho se ele nao se importa de adicionar aqui um argumento para validar se e um i0/i1 correto tambem,
+ou se prefere fazer de outra forma */
+int is_valid_i(const char* string, int string_length){
+	if(string_length < 5) //Pressupoe que e mandado pelo menos 1 byte de data
+		return FALSE;
+
+	if(!is_a_flag(string[A_FLAG_INDEX])){
+		return FALSE;
+	}
+
+	if(!is_c_flag(string[C_FLAG_INDEX])){
+		return FALSE;
+	}
+
+	if(!is_valid_bcc(string[A_FLAG_INDEX],string[C_FLAG_INDEX], string[BCC_FLAG_INDEX])){
+		return FALSE;
+	}
+
+	/* TODO: Validacao de data */
+	/* TODO: Bcc2, perguntar a prof como fazer*/
+
+	return TRUE;
+}
+
+int ua_validator (char* buffer, int length){
+    return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_UA);
+}
+
+int set_validator (char* buffer, int length){
+    return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_SET);
+}
+
+int disc_validator (char* buffer, int length){
+    return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_DISC);
+}
+
+int rr_validator (char* buffer, int length, int type){
+    switch(type){
+        case RR0:
+        return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_RR_N0);
+        case RR1:
+        return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_RR_N1);
+        default:
+        return -1;
+    }
+
+}
 
 void sig_alarm_handler(int sig) {
     if (sig == SIGALRM) {
@@ -32,7 +158,7 @@ int read_frame(LinkLayer link_layer) {
 
 	do {
         printf("Reading from port\n");
-		res = read(fd, &c, 1);
+		res = read(link_layer->fd, &c, 1);
 		if (res < 1)
 			return -1;
 	} while(c != SERIAL_FLAG);
@@ -41,7 +167,7 @@ int read_frame(LinkLayer link_layer) {
 		length = 0;
 
 		do {
-	        res = read(fd, &c, 1);
+	        res = read(link_layer->fd, &c, 1);
 			if (res < 1)
 				return -1;
 			if (c == SERIAL_FLAG)
@@ -52,12 +178,10 @@ int read_frame(LinkLayer link_layer) {
 	            	res = read(link_layer->fd, &c ,1);
 	            	if (res < 1)
 	            		return -1; 
-	                if(c == SERIAL_FLAG_REPLACE){
+	                if(c == SERIAL_FLAG_REPLACE)
 	                    link_layer->buffer[length] = SERIAL_FLAG;
-	                }
-	                else if(c == SERIAL_ESCAPE_REPLACE){
+	                else if(c == SERIAL_ESCAPE_REPLACE)
 	                    link_layer->buffer[length] == SERIAL_ESCAPE;
-	                }
 	                else
 	                	return -1;
 	            	break;
@@ -70,7 +194,6 @@ int read_frame(LinkLayer link_layer) {
 
 		if (length == link_layer->max_frame_size)
 			return -1;
-		}
 	}
 
 	return length;
@@ -79,8 +202,9 @@ int read_frame(LinkLayer link_layer) {
 int write_frame(LinkLayer link_layer, char* buffer, unsigned int length) {
 	unsigned int i;
 	int ret = 0;
+	char c = SERIAL_FLAG;
 
-	if(write(link_layer->fd,SERIAL_FLAG,1) < 1)
+	if(write(link_layer->fd,&c,1) < 1)
 		return -1;
 
 	/* Byte stuffing */
@@ -88,26 +212,31 @@ int write_frame(LinkLayer link_layer, char* buffer, unsigned int length) {
 	for(i = 0; i < length; ++i) {
 		 switch(buffer[i]) {
             case SERIAL_FLAG:
-            if(write(link_layer->fd, SERIAL_ESCAPE,1) < 1)
+            c = SERIAL_ESCAPE;
+            if(write(link_layer->fd, &c,1) < 1)
             	return ret;
-            if(write(link_layer->fd, SERIAL_FLAG_REPLACE, 1) < 1)
+            c = SERIAL_FLAG_REPLACE;
+            if(write(link_layer->fd, &c, 1) < 1)
             	return ret;
             break;
             case SERIAL_ESCAPE:
-            if(write(link_layer->fd, SERIAL_ESCAPE,1) < 1)
+            c = SERIAL_ESCAPE;
+            if(write(link_layer->fd, &c,1) < 1)
             	return ret;
-            if(write(link_layer->fd, SERIAL_ESCAPE_REPLACE,1) < 1)
+            c = SERIAL_ESCAPE_REPLACE;
+            if(write(link_layer->fd, &c,1) < 1)
             	return ret;
             break;
             default:
-            if(write(link_layer->fd, buffer[i], 1) < 1)
+            if(write(link_layer->fd, &buffer[i], 1) < 1)
             	return ret;
             break;
         }
         ++ret;
 	}
 	
-	if(write(link_layer->fd,SERIAL_FLAG,1) < 1)
+	c = SERIAL_FLAG;
+	if(write(link_layer->fd,&c,1) < 1)
 		return -1;
 
 	return ret;
@@ -118,7 +247,7 @@ LinkLayer llinit(int port, int flag, unsigned int baudrate, unsigned int max_tri
 	sprintf(port_name, "/dev/ttyS%d", port);
 	struct termios oldtio;
 	
-	fd = open(port_name, O_RDWR | O_NOCTTY );
+	int fd = open(port_name, O_RDWR | O_NOCTTY );
 	if (fd < 0) {
 		perror(port_name);
 		return NULL;
@@ -126,14 +255,14 @@ LinkLayer llinit(int port, int flag, unsigned int baudrate, unsigned int max_tri
 
  	if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
     	perror("tcgetattr");
-    	return -1;
+    	return NULL;
 	}
 
 	struct termios newtio;
-	bzero(&newtio, sizeof(newtio));
+	memset(&newtio, 0, sizeof(newtio));
 
 	/* 	Control, input, output flags */
-	newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD; /*  */
+	newtio.c_cflag = baudrate | CS8 | CLOCAL | CREAD; /*  */
 	newtio.c_iflag = IGNPAR;
 	newtio.c_oflag = OPOST;
 
@@ -162,8 +291,9 @@ LinkLayer llinit(int port, int flag, unsigned int baudrate, unsigned int max_tri
     	return NULL;
 	}
 
-	LinkLayer link_layer = malloc(sizeof(LinkLayer_t));
+	LinkLayer link_layer = malloc(sizeof(struct LinkLayer_t));
 	
+	link_layer->fd = fd;
 	link_layer->flag = flag;
 	link_layer->baudrate = baudrate;
 	link_layer->timeout = timeout;
@@ -204,7 +334,7 @@ int llopen_transmitter(LinkLayer link_layer) {
            	if (length == -1)
                	break;
            	printf("Validating string\n");
-           	if(is_valid_string(buf,length) && ua_validator(buf, length)) {
+           	if(is_valid_string(link_layer->buffer,length) && ua_validator(link_layer->buffer, length)) {
           		printf("Valid string\n"); 
               	alarm(0);
                	break;
@@ -219,7 +349,7 @@ int llopen_transmitter(LinkLayer link_layer) {
     return 0;
 }
 
-int llopen_receiver(int fd) {
+int llopen_receiver(LinkLayer link_layer) {
 	char buf[MAX_STRING_SIZE];
 	printf("Receiver open sequence\n");
 	printf("Reading from port\n");
@@ -239,7 +369,7 @@ int llopen_receiver(int fd) {
    }
 
    write_frame(link_layer, ua, 3);
-   return fd;
+   return 0;
 }
 
 int llclose(LinkLayer link_layer){
@@ -262,7 +392,7 @@ int llclose(LinkLayer link_layer){
 }
 
 
-int llclose_receiver(LinkLayer link_layer){
+int llclose_receiver(LinkLayer link_layer) {
      char buf[MAX_STRING_SIZE];
      char disc[] = {SERIAL_FLAG,
        SERIAL_A_ANS_RECEIVER,
@@ -274,7 +404,7 @@ int llclose_receiver(LinkLayer link_layer){
 
     int length;
     while (1) {
-        length = read_frame(link_layer,buf);
+        length = read_frame(link_layer);
         if (length <= 0)
             continue;        
         printf("Validating string\n");
@@ -283,12 +413,12 @@ int llclose_receiver(LinkLayer link_layer){
     }
 
     /* Envio do DISC */
-    write(fd,disc,5);
+    write_frame(link_layer,disc,5);
 
     /* Recepcao do UA */
     /* Nota:  infinto àn Debater com a professora ciclo infinto à espera do UA*/
     while (1) {
-        length = serial_read_string(fd,buf);
+        length = read_frame(link_layer);
         if (length <= 0)
             continue;        
         printf("Validating string\n");
@@ -296,7 +426,7 @@ int llclose_receiver(LinkLayer link_layer){
         break;
     }
 
-    return fd;
+    return 0;
 }
 
 unsigned int get_max_message_size(LinkLayer link_layer) {
