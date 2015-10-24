@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
     if (llclose(link_layer))
       return 1;
     printf("Port closed\n");
+	lldelete(link_layer);
 
     return 0;
 }
