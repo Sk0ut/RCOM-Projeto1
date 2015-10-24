@@ -446,3 +446,11 @@ int llclose_receiver(LinkLayer link_layer) {
 unsigned int get_max_message_size(LinkLayer link_layer) {
 	return link_layer->max_frame_size - 6;
 }
+
+void lldelete(LinkLayer link_layer) {
+	if (link_layer) {
+		if (link_layer->buffer)
+			free(link_layer->buffer);
+		free(link_layer);
+	}
+}
