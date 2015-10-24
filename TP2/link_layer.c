@@ -196,6 +196,11 @@ int read_frame(LinkLayer link_layer) {
 			return -1;
 	}
 
+	int i;
+	printf("Values read: ");
+	for (i = 0; i < length; ++i)
+		printf("0x%.2x ", link_layer->buffer[i]);
+	printf("\n");
 	return length;
 }
 
