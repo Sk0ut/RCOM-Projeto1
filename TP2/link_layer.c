@@ -508,7 +508,7 @@ int llread(LinkLayer link_layer){
            break;
    	}
 
-   	char* rr = malloc(sizeof(char) * 3);
+   	char rr[3];
 
    	rr[0] = SERIAL_A_ANS_RECEIVER;
    	if(iType == I0){
@@ -527,32 +527,31 @@ int llread(LinkLayer link_layer){
 }
 
 int llwrite(LinkLayer link_layer, char* buf, int length, int iFlag){
-
 	int iLength = length+4;
 	int ret = 0;
-	char* i = malloc(sizeof(char)*(iLength));
+	char frame[iLength];
 
-	i[0] = SERIAL_A_COM_TRANSMITTER;
+	frame[0] = SERIAL_A_COM_TRANSMITTER;
 	if(iFlag == I0){
-		i[1] = SERIAL_I_C_N0;
-		i[2] = SERIAL_A_COM_TRANSMITTER ^ SERIAL_I_C_N0;
+		frame[1] = SERIAL_I_C_N0;
+		frame[2] = SERIAL_A_COM_TRANSMITTER ^ SERIAL_I_C_N0;
 	}
 	else{
 		i[1] = SERIAL_I_C_N1;
 		i[2] = SERIAL_A_COM_TRANSMITTER ^ SERIAL_I_C_N1;
 	}
 
-	i[3] = buf[0];
+	frame[3] = buf[0];
 
 	int bufCounter;
 	char bcc2 = buf[0];
 
 	for(bufCounter = 1; bufCounter < length; bufCounter++){
-		i[3+bufCounter] = buf[bufCounter];
+		frame[3+bufCounter] = buf[bufCounter];
 		bcc2^=buf[bufCounter];
 	}
 
-	i[length-1] = bcc2;
+	frame[ilength-1] = bcc2;
 
 	int rrType, rrLength;
     if(iFlag == I0)
@@ -563,7 +562,7 @@ int llwrite(LinkLayer link_layer, char* buf, int length, int iFlag){
 	reset_alarm();
     while (tries < link_layer->max_tries) {
     	printf("Sending I string\n");
-   		write_frame(link_layer,i,3);
+   		write_frame(link_layer,frame,ilength);
     	alarm(3);
     	while (1) {
         	rrLength = read_frame(link_layer);
@@ -583,7 +582,7 @@ int llwrite(LinkLayer link_layer, char* buf, int length, int iFlag){
    	if (tries == link_layer->max_tries)    
        	return -1;
 
-    return iLength;
+    return length;
 }
 
 void lldelete(LinkLayer link_layer) {
