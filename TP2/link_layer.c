@@ -550,7 +550,7 @@ int llwrite(LinkLayer link_layer, char* buf, int length, int iFlag){
 		bcc2^=buf[bufCounter];
 	}
 
-	frame[ilength-1] = bcc2;
+	frame[iLength-1] = bcc2;
 
 	int rrType, rrLength;
     if(iFlag == I0)
@@ -561,7 +561,7 @@ int llwrite(LinkLayer link_layer, char* buf, int length, int iFlag){
 	reset_alarm();
     while (tries < link_layer->max_tries) {
     	printf("Sending I string\n");
-   		write_frame(link_layer,frame,ilength);
+   		write_frame(link_layer,frame,iLength);
     	alarm(3);
     	while (1) {
         	rrLength = read_frame(link_layer);
