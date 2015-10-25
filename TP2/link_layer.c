@@ -528,8 +528,7 @@ int llread(LinkLayer link_layer){
 
 int llwrite(LinkLayer link_layer, char* buf, int length, int iFlag){
 	int iLength = length+4;
-	int ret = 0;
-	char frame[iLength];
+	char frame[length + 4];
 
 	frame[0] = SERIAL_A_COM_TRANSMITTER;
 	if(iFlag == I0){
@@ -537,8 +536,8 @@ int llwrite(LinkLayer link_layer, char* buf, int length, int iFlag){
 		frame[2] = SERIAL_A_COM_TRANSMITTER ^ SERIAL_I_C_N0;
 	}
 	else{
-		i[1] = SERIAL_I_C_N1;
-		i[2] = SERIAL_A_COM_TRANSMITTER ^ SERIAL_I_C_N1;
+		frame[1] = SERIAL_I_C_N1;
+		frame[2] = SERIAL_A_COM_TRANSMITTER ^ SERIAL_I_C_N1;
 	}
 
 	frame[3] = buf[0];
