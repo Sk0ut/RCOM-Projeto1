@@ -18,6 +18,13 @@ int is_valid_bcc(const char a, const char c, const char bcc);
 int is_valid_combination(const char a, const char c);
 int is_valid_i(const char* string, int string_length);
 
+int llopen_receiver(LinkLayer link_layer);
+int llopen_transmitter(LinkLayer link_layer);
+int llclose_transmitter(LinkLayer link_layer);
+int llclose_receiver(LinkLayer link_layer);
+
+
+
 struct LinkLayer_t {
 	int fd;
 	unsigned int baudrate;
@@ -526,7 +533,7 @@ int llwrite(LinkLayer link_layer, char* buf, int length, int iFlag){
 	char* i = malloc(sizeof(char)*(iLength));
 
 	i[0] = SERIAL_A_COM_TRANSMITTER;
-	if(iFlag = I0){
+	if(iFlag == I0){
 		i[1] = SERIAL_I_C_N0;
 		i[2] = SERIAL_A_COM_TRANSMITTER ^ SERIAL_I_C_N0;
 	}
