@@ -99,6 +99,7 @@ int is_valid_combination(const char a, const char c){
 }
 
 /* Validates I String. Returns whether it is a I0 or I1 frame */
+// TODO: Repensar a lógica disto
 int is_valid_i(const char* string, int string_length){
 	if(string_length < 5) //Pressupoe que e mandado pelo menos 1 byte de data
 		return FALSE;
@@ -495,7 +496,7 @@ int llclose_receiver(LinkLayer link_layer) {
     return 0;
 }
 
-int llread(LinkLayer link_layer){
+int llread(LinkLayer link_layer, char *buf){
 	int iType;
 	int length;
 
@@ -508,22 +509,21 @@ int llread(LinkLayer link_layer){
            break;
    	}
 
+	memcpy(buf, &(link_layer->buffer[3]), length-4);
+	
+	// TODO: Considerar hipótese de REJ
+	
    	char rr[3];
-
    	rr[0] = SERIAL_A_ANS_RECEIVER;
-   	if(iType == I0){
+   	if(iType == I0)
    		rr[1] = SERIAL_C_RR_N1;
-   		rr[2] = SERIAL_A_ANS_RECEIVER^SERIAL_C_RR_N1;
-   	}
-
-   	else{
+   	else
 		rr[1] = SERIAL_C_RR_N0;
-   		rr[2] = SERIAL_A_ANS_RECEIVER^SERIAL_C_RR_N0;
-   	}
+	rr[2] = rr[0] ^ rr[1];
 
-   	write_frame(link_layer,rr,5);
+   	write_frame(link_layer,rr,3);
 
-   	return 5;
+   	return length-4;
 }
 
 int llwrite(LinkLayer link_layer, char* buf, int length, int iFlag){
