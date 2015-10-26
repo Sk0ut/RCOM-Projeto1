@@ -449,15 +449,15 @@ int llclose_transmitter(LinkLayer link_layer){
         SERIAL_A_COM_TRANSMITTER^SERIAL_C_DISC};
 
     char ua[] = {
-        SERIAL_A_ANS_RECEIVER,
+        SERIAL_A_ANS_TRANSMITTER,
         SERIAL_C_UA,
-        SERIAL_A_ANS_RECEIVER^SERIAL_C_UA,
+        SERIAL_A_ANS_TRANSMITTER^SERIAL_C_UA,
     };
 
     int length;
     reset_alarm();
     while (tries < link_layer->max_tries) {
-    printf("Sending DISC\n");
+    printf("Sending DISC Transmitter\n");
     write_frame(link_layer,disc,3);
     alarm(3);
     while (1) {
@@ -484,7 +484,7 @@ int llclose_transmitter(LinkLayer link_layer){
 }
 
 int llclose_receiver(LinkLayer link_layer) {
-    char disc[] = {SERIAL_A_ANS_RECEIVER, SERIAL_C_DISC, SERIAL_A_ANS_RECEIVER^SERIAL_C_DISC};
+    char disc[] = {SERIAL_A_COM_RECEIVER, SERIAL_C_DISC, SERIAL_A_COM_RECEIVER^SERIAL_C_DISC};
     int length;
     while (1) {
         length = read_frame(link_layer);
@@ -497,7 +497,7 @@ int llclose_receiver(LinkLayer link_layer) {
 	
     reset_alarm();
     while (tries < link_layer->max_tries) {
-    printf("Sending DISC\n");
+    printf("Sending DISC Receiver\n");
     write_frame(link_layer,disc,3);
     alarm(3);
     while (1) {
