@@ -129,26 +129,53 @@ int is_valid_i(const char* string, int string_length){
 	else return I1;
 }
 
-int ua_validator (char* buffer, int length){
-    return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_UA);
+int ua_validator(int flag, char* buffer, int length){
+    int aFlag;
+
+    if(flag == TRANSMITTER)
+    	aFlag = SERIAL_A_ANS_RECEIVER;
+    else
+    	aFlag = SERIAL_A_ANS_TRANSMITTER;
+
+    return 	(length == 3) &&
+    		(buffer[A_FLAG_INDEX] == aFlag) &&
+    		(buffer[C_FLAG_INDEX] == SERIAL_C_UA);
 }
 
-int set_validator (char* buffer, int length){
-    return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_SET);
+int set_validator (int flag, char* buffer, int length){
+	int aFlag;
+
+	if(flag == TRANSMITTER)
+    	aFlag = SERIAL_A_COM_RECEIVER;
+    else
+    	aFlag = SERIAL_A_COM_TRANSMITTER;
+
+    return 	(length == 3) &&
+    		(buffer[A_FLAG_INDEX] == aFlag) &&
+    		(buffer[C_FLAG_INDEX] == SERIAL_C_SET);
 }
 
-int disc_validator (char* buffer, int length){
-    return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_DISC);
+int disc_validator (int flag, char* buffer, int length){
+    int aFlag;
+
+	if(flag == TRANSMITTER)
+    	aFlag = SERIAL_A_COM_RECEIVER;
+    else
+    	aFlag = SERIAL_A_COM_TRANSMITTER;
+
+    return 	(length == 3) &&
+    		(buffer[A_FLAG_INDEX] == aFlag) &&
+    		(buffer[C_FLAG_INDEX] == SERIAL_C_DISC);
 }
 
 int rr_validator (char* buffer, int length, int type){
     switch(type){
         case RR0:
-        return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_RR_N0);
+        	return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_RR_N0);
         case RR1:
-        return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_RR_N1);
+        	return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_RR_N1);
         default:
-        return -1;
+        	return -1;
     }
 
 }
@@ -361,7 +388,7 @@ int llopen_transmitter(LinkLayer link_layer) {
            	if (length == -1)
                	break;
            	printf("Validating string\n");
-           	if(is_valid_string(link_layer->buffer,length) && ua_validator(link_layer->buffer, length)) {
+           	if(is_valid_string(link_layer->buffer,length) && ua_validator(link_layer->flag, link_layer->buffer, length)) {
           		printf("Valid string\n"); 
               	alarm(0);
                	break;
@@ -389,7 +416,7 @@ int llopen_receiver(LinkLayer link_layer) {
         if (length <= 0)
             continue;        
         printf("Validating string\n");
-        if(is_valid_string(link_layer->buffer,length) && set_validator(link_layer->buffer, length))
+        if(is_valid_string(link_layer->buffer,length) && set_validator(link_layer->flag, link_layer->buffer, length))
            break;
    }
 
@@ -439,7 +466,7 @@ int llclose_transmitter(LinkLayer link_layer){
             break;
 
         printf("Validating string\n");
-        if(is_valid_string(link_layer->buffer,length) && disc_validator(link_layer->buffer, length)) {
+        if(is_valid_string(link_layer->buffer,length) && disc_validator(link_layer->flag, link_layer->buffer, length)) {
             printf("Valid string\n"); 
             alarm(0);
             break;
@@ -464,7 +491,7 @@ int llclose_receiver(LinkLayer link_layer) {
         if (length <= 0)
             continue;        
         printf("Validating string\n");
-        if(is_valid_string(link_layer->buffer,length) && disc_validator(link_layer->buffer, length))
+        if(is_valid_string(link_layer->buffer,length) && disc_validator(link_layer->flag, link_layer->buffer, length))
            break;
     }
 	
@@ -479,7 +506,7 @@ int llclose_receiver(LinkLayer link_layer) {
             break;
 
         printf("Validating string\n");
-        if(is_valid_string(link_layer->buffer,length) && ua_validator(link_layer->buffer, length)) {
+        if(is_valid_string(link_layer->buffer,length) && ua_validator(link_layer->flag, link_layer->buffer, length)) {
             printf("Valid string\n"); 
             alarm(0);
             break;
