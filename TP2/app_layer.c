@@ -77,7 +77,7 @@ int main(int argc, char** argv){
 	unsigned int segmentSize = get_max_message_size(link_layer) - 4;
 	printf("Segment size: %d\n",segmentSize);
 
-	char segment[segmentSize];
+	unsigned char segment[segmentSize];
 
 	if (flag == TRANSMITTER) {
 		// Build Control package
@@ -94,7 +94,7 @@ int main(int argc, char** argv){
 		int i;
 
 		for(i= 0; i < file_name_size+7;i++){
-			printf("0x%x ",segment[i]);
+			printf("0x%ux ",segment[i]);
 		}
 		printf("\n");
 		//Send start
