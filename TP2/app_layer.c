@@ -88,8 +88,8 @@ int main(int argc, char** argv){
 		memcpy(&(segment[3]), file_info.name, file_name_size);
 		segment[3+file_name_size] = PACKAGE_T_SIZE;
 		segment[4+file_name_size] = 2;
-		segment[5+file_name_size] = (file_info.size && 0xFF00) >> 8;
-		segment[6+file_name_size] = (file_info.size && 0xFF);
+		segment[5+file_name_size] = (file_info.size & 0xFF00) >> 8;
+		segment[6+file_name_size] = (file_info.size & 0xFF);
 
 		int i;
 
