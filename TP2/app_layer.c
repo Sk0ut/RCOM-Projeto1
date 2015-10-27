@@ -102,7 +102,7 @@ int main(int argc, char** argv){
 		int length;
 		unsigned char sequenceNumber = 0;
 		do {
-			length = read(fd, &(segment[4]), segmentSize);
+			length = read(file_info.fd, &(segment[4]), segmentSize);
 			
 			if (length > 0) {
 				segment[0] = PACKAGE_DATA;
