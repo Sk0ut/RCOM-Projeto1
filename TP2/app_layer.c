@@ -159,7 +159,6 @@ int app_receiver(int argc, char **argv) {
 	printf("max_tries: %d\n", max_tries);
 	printf("timeout: %d\n", timeout);
 	printf("max_frame_size: %d\n", max_frame_size);
-	printf("filepath: %s\n", filePath);
 	
 	// Read start
 	// Create file
