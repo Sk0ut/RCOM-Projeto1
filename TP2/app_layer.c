@@ -99,6 +99,26 @@ int main(int argc, char** argv){
 		printf("\n");
 		//Send start
 		//Send data
+		int length;
+		unsigned char sequenceNumber = 0;
+		do {
+			length = read(fd, &(segment[4]), segmentSize);
+			
+			if (length > 0) {
+				segment[0] = PACKAGE_DATA;
+				segment[1] = sequenceNumber;
+				segment[2] = (length & 0xFF00) >> 8;
+				segment[3] = length & 0xFF;
+				// send segment;
+				int i;
+				for (i = 0; i < length + 4; ++i)
+					printf("0x%.2x ", segment[i]);
+				printf("\n");
+				++sequenceNumber;
+			}
+		} while (length > 0);
+		
+			
 		//Send end
 		segment[0] = PACKAGE_END;
 		segment[1] = PACKAGE_T_NAME;
