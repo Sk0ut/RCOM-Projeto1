@@ -26,7 +26,7 @@ int get_file_info(File_info_t* file_info, char* filePath){
 		return -1;
 
 	file_info->fd = fd;
-	file_info->name = basename(filePath);
+	sprintf(file_info->name, "%s", basename(filePath));
 	file_info->size = st.st_size;
 
 	return 0;
@@ -43,7 +43,7 @@ int main(int argc, char** argv){
 	if (flag == TRANSMITTER){
 		if(get_file_info(&file_info, filePath) == -1)
 			return 1;
-		printf("Fd: %d, Name: %s, Size:%d\n", file_info.fd, file_info.name, file_info.size);
+		printf("Fd: %d, Name: %s, Size:%ld\n", file_info.fd, file_info.name, file_info.size);
 	}
 
 	//lldelete(link_layer);
