@@ -533,24 +533,24 @@ int llread(LinkLayer link_layer, char *buf){
             continue;        
         printf("Validating string\n");
         if(is_valid_string(link_layer->buffer,length))
-           	break;
+        	if(i_valid_bcc2(link_layer, link_layer->buffer,length))
+           		break;
    	}
-
-
-
 	memcpy(buf, &(link_layer->buffer[3]), length-4);
 	
 	// TODO: Considerar hipótese de REJ
-	
+
    	char rr[3];
    	rr[0] = SERIAL_A_ANS_RECEIVER;
-   	if(iType == I0)
+   	if(link_layer->sequence_number == 0)
    		rr[1] = SERIAL_C_RR_N1;
    	else
 		rr[1] = SERIAL_C_RR_N0;
 	rr[2] = rr[0] ^ rr[1];
 
-   	write_frame(link_layer,rr,3);
+	write_frame(link_layer,rr,3);
+
+	link_layer->sequence_number = 1 - link_layer->sequence_number;
 
    	return length-4;
 }
