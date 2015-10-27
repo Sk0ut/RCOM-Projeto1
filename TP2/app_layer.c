@@ -44,10 +44,9 @@ int get_file_info(File_info_t* file_info, char* filePath){
 	./nserial /dev/ttyS0 ./file.txt baudrate max_tries timeout max_frame_size
 */
 
-int main(int argc, char** argv){
-
-	if(argc != 7){
-		printf("Usage: %s <port> <filepath> <baudrate> <max_tries> <timeout> <max_frame_size>\n", argv[0]);
+int app_transmitter(int argc, char **argv) {
+	if(argc != 8){
+		printf("Usage: %s <TRANSMITTERorRECEIVER> <port> <filepath> <baudrate> <max_tries> <timeout> <max_frame_size>\n", argv[0]);
 		return 1;
 	}
 
@@ -68,74 +67,86 @@ int main(int argc, char** argv){
 
 	LinkLayer link_layer = llinit(port, flag, baudrate, max_tries, timeout, max_frame_size);
 
-	if (flag == TRANSMITTER){
-		if(get_file_info(&file_info, filePath) == -1)
-			return 1;
-		printf("Fd: %d, Name: %s, Size:%ld\n", file_info.fd, file_info.name, file_info.size);
-	}
+	if(get_file_info(&file_info, filePath) == -1)
+		return 1;
+	printf("Fd: %d, Name: %s, Size:%ld\n", file_info.fd, file_info.name, file_info.size);
 
 	unsigned int segmentSize = get_max_message_size(link_layer) - 4;
 	printf("Segment size: %d\n",segmentSize);
 
 	unsigned char segment[segmentSize];
 
-	if (flag == TRANSMITTER) {
-		// Build Control package
-		segment[0] = PACKAGE_START;
-		segment[1] = PACKAGE_T_NAME;
-		unsigned char file_name_size = strlen(file_info.name) + 1;
-		segment[2] = file_name_size;
-		memcpy(&(segment[3]), file_info.name, file_name_size);
-		segment[3+file_name_size] = PACKAGE_T_SIZE;
-		segment[4+file_name_size] = 2;
-		segment[5+file_name_size] = (file_info.size & 0xFF00) >> 8;
-		segment[6+file_name_size] = (file_info.size & 0xFF);
+	// Build Control package
+	segment[0] = PACKAGE_START;
+	segment[1] = PACKAGE_T_NAME;
+	unsigned char file_name_size = strlen(file_info.name) + 1;
+	segment[2] = file_name_size;
+	memcpy(&(segment[3]), file_info.name, file_name_size);
+	segment[3+file_name_size] = PACKAGE_T_SIZE;
+	segment[4+file_name_size] = 2;
+	segment[5+file_name_size] = (file_info.size & 0xFF00) >> 8;
+	segment[6+file_name_size] = (file_info.size & 0xFF);
 
-		int i;
+	int i;
 
-		for(i= 0; i < file_name_size+7;i++){
-			printf("0x%x ",segment[i]);
-		}
-		printf("\n");
-		//Send start
-		//Send data
-		int length;
-		unsigned char sequenceNumber = 0;
-		do {
-			length = read(file_info.fd, &(segment[4]), segmentSize);
-			
-			if (length > 0) {
-				segment[0] = PACKAGE_DATA;
-				segment[1] = sequenceNumber;
-				segment[2] = (length & 0xFF00) >> 8;
-				segment[3] = length & 0xFF;
-				// send segment;
-				int i;
-				for (i = 0; i < length + 4; ++i)
-					printf("0x%.2x ", segment[i]);
-				printf("\n");
-				++sequenceNumber;
-			}
-		} while (length > 0);
-		
-			
-		//Send end
-		segment[0] = PACKAGE_END;
-		segment[1] = PACKAGE_T_NAME;
-		segment[2] = file_name_size;
-		memcpy(&(segment[3]), file_info.name, file_name_size);
-		segment[3+file_name_size] = PACKAGE_T_SIZE;
-		segment[4+file_name_size] = sizeof(long);
-		*((long *)&(segment[5+file_name_size])) = file_info.size;
-		
-	} else if (flag == RECEIVER) {
-		// Read start
-		// Create file
-		// Read data
-		// Find end
+	for(i= 0; i < file_name_size+7;i++){
+		printf("0x%x ",segment[i]);
 	}
-
+	printf("\n");
+	//Send start
+	//Send data
+	int length;
+	unsigned char sequenceNumber = 0;
+	do {
+		length = read(file_info.fd, &(segment[4]), segmentSize);
+		
+		if (length > 0) {
+			segment[0] = PACKAGE_DATA;
+			segment[1] = sequenceNumber;
+			segment[2] = (length & 0xFF00) >> 8;
+			segment[3] = length & 0xFF;
+			// send segment;
+			int i;
+			for (i = 0; i < length + 4; ++i)
+				printf("0x%.2x ", segment[i]);
+			printf("\n");
+			++sequenceNumber;
+		}
+	} while (length > 0);
+	
+		
+	//Send end
+	segment[0] = PACKAGE_END;
+	segment[1] = PACKAGE_T_NAME;
+	segment[2] = file_name_size;
+	memcpy(&(segment[3]), file_info.name, file_name_size);
+	segment[3+file_name_size] = PACKAGE_T_SIZE;
+	segment[4+file_name_size] = sizeof(long);
+	*((long *)&(segment[5+file_name_size])) = file_info.size;
+	
 	lldelete(link_layer);
 
 	return 0;
+}
+
+int app_receiver(int argc, char **argv) {
+	// Read start
+	// Create file
+	// Read data
+	// Find end
+
+	return 0;
+}
+
+int main(int argc, char** argv){
+
+	if (argc == 1)
+		return 1;
+	
+	if (strcmp(argv[1], "TRANSMITTER") == 0)
+		return app_transmitter(argc, argv);
+	else if (strcmp(argv[1], "RECEIVER") == 0)
+		return app_receiver(argc, argv);
+	else
+		return 1;
 }
