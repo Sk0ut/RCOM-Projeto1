@@ -98,7 +98,7 @@ int is_valid_combination(const char a, const char c){
 	return TRUE;
 }
 
-/* Validates I String. Returns whether it is a I0 or I1 frame */
+/* Validates I String Header */
 // TODO: Repensar a lógica disto
 int is_valid_i(const char* string, int string_length){
 	if(string_length < 5) //Pressupoe que e mandado pelo menos 1 byte de data
@@ -116,17 +116,35 @@ int is_valid_i(const char* string, int string_length){
 		return FALSE;
 	}
 
-	int iCounter;
-	char bcc2 = string[0];
-	for(iCounter=1; iCounter < string_length-4; iCounter++)
-		bcc2 ^= string[iCounter];
+	return TRUE;
+}
+ /* Determina o tipo de trama I e valida o BCC2.*/
+int i_frame_type(char* buffer, int string_length){
+	char iType;
 
-	if(bcc2 != string[string_length-1])
-		return FALSE;
+	iType = buffer[C_FLAG_INDEX];
 
-	if(string[C_FLAG_INDEX] == SERIAL_I_C_N0)
-		return I0;
-	else return I1;
+	if((iType == SERIAL_I_C_N0 && link_layer->sequence_number == 1)
+		|| (iType == SERIAL_I_C_N1 && link_layer->sequence_number == 0))
+		return -1;
+
+	if(bcc2 != buffer[string_length-1])
+		if(iType == SERIAL_I_C_N0)
+			return SERIAL_C_REJ_N0;
+		else
+			return SERIAL_C_REJ_N1;
+
+	return iType;
+}
+
+int i_valid_bcc2(Linklayer link_layer, char* buffer, int string_length){
+	int bcc2 = 0;
+	int i;
+
+	for(i = 3; i < string_length - 1; ++i)
+		bcc2 ^= buffer[i];
+
+	return bcc2 == buffer[string_length-1];
 }
 
 int ua_validator(int flag, char* buffer, int length){
@@ -532,9 +550,13 @@ int llread(LinkLayer link_layer, char *buf){
         if (length <= 0)
             continue;        
         printf("Validating string\n");
-        if(is_valid_string(link_layer->buffer,length) && (iType=is_valid_i(link_layer->buffer, length)))
-           break;
+        if(is_valid_string(link_layer->buffer,length)){
+        	iType = i_frame_type(link_layer,link_layer->buf,length);
+           	break;
+        }
    	}
+
+
 
 	memcpy(buf, &(link_layer->buffer[3]), length-4);
 	

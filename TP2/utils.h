@@ -15,7 +15,8 @@
 #define SERIAL_C_UA 0x03
 #define SERIAL_C_RR_N1 0x21
 #define SERIAL_C_RR_N0 0x01
-#define SERIAL_C_REJ 0x25
+#define SERIAL_C_REJ_N0 0x05
+#define SERIAL_C_REJ_N1 0x25
 #define SERIAL_I_C_N0	0x00
 #define SERIAL_I_C_N1	0x2
 
@@ -28,10 +29,10 @@
 
 #define C_FLAG_R_VALUE	(1<<5)
 
-#define RR0	0
-#define RR1 1
-#define I0 1
-#define I1 2
+#define RR0		0
+#define RR1 	1
+#define I0 		2
+#define I1 		3
 
 #define TRUE 1
 #define FALSE 0
