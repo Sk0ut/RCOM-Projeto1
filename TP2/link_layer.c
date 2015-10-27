@@ -84,7 +84,7 @@ int is_c_flag(const char c){
 			return TRUE;
 		default:
 			return (c|C_FLAG_R_VALUE)==SERIAL_C_RR_N0 || (c|C_FLAG_R_VALUE)==SERIAL_C_RR_N1 ||
-					(c|C_FLAG_R_VALUE)==SERIAL_C_REJ;
+					(c|C_FLAG_R_VALUE)==SERIAL_C_REJ_N0 || (c|C_FLAG_R_VALUE)==SERIAL_C_REJ_N1;
 	}
 }
 
@@ -123,10 +123,6 @@ int i_frame_type(char* buffer, int string_length){
 	char iType;
 
 	iType = buffer[C_FLAG_INDEX];
-
-	if((iType == SERIAL_I_C_N0 && link_layer->sequence_number == 1)
-		|| (iType == SERIAL_I_C_N1 && link_layer->sequence_number == 0))
-		return -1;
 
 	if(bcc2 != buffer[string_length-1])
 		if(iType == SERIAL_I_C_N0)
