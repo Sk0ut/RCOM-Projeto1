@@ -34,7 +34,7 @@ int get_file_info(File_info_t* file_info, char* filePath){
 
 int main(int argc, char** argv){
 
-	int flag;
+	int flag = TRANSMITTER;
 	File_info_t file_info;
 	char* filePath = argv[1];
 
