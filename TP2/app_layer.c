@@ -74,6 +74,9 @@ int app_transmitter(int argc, char **argv) {
 		return 1;
 	printf("Fd: %d, Name: %s, Size:%ld\n", file_info.fd, file_info.name, file_info.size);
 
+	if (llopen(link_layer) != 0)
+		return 1;
+	
 	unsigned int segmentSize = get_max_message_size(link_layer) - 4;
 	printf("Segment size: %d\n",segmentSize);
 
@@ -159,6 +162,9 @@ int app_receiver(int argc, char **argv) {
 	printf("max_tries: %d\n", max_tries);
 	printf("timeout: %d\n", timeout);
 	printf("max_frame_size: %d\n", max_frame_size);
+	
+	if (llopen(link_layer) != 0)
+		return 1;
 	
 	// Read start
 	// Create file
