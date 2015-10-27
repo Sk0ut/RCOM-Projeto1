@@ -132,6 +132,10 @@ int app_transmitter(int argc, char **argv) {
 	segment[4+file_name_size] = sizeof(long);
 	*((long *)&(segment[5+file_name_size])) = file_info.size;
 	
+	
+	if (llclose(link_layer) != 0)
+		return 1;
+	
 	lldelete(link_layer);
 
 	return 0;
@@ -171,6 +175,9 @@ int app_receiver(int argc, char **argv) {
 	// Read data
 	// Find end
 
+	
+	if (llclose(link_layer) != 0)
+		return 1;
 	
 	lldelete(link_layer);
 	
