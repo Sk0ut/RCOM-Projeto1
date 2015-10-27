@@ -9,6 +9,11 @@
 #include <termios.h>
 
 #define BAUDRATE B38400
+#define PACKAGE_DATA 0
+#define PACKAGE_START 1
+#define PACKAGE_END 2
+#define PACKAGE_T_SIZE 0
+#define PACKAGE_T_NAME 1
 
 typedef struct {
 	int fd;
@@ -70,6 +75,45 @@ int main(int argc, char** argv){
 
 	unsigned int segmentSize = get_max_message_size(link_layer) - 4;
 	printf("Segment size: %d\n",segmentSize);
+
+	char segment[segmentSize];
+
+	if (flag == TRANSMITTER) {
+		// Build Control package
+		segment[0] = PACKAGE_START;
+		segment[1] = PACKAGE_T_NAME;
+		unsigned char file_name_size = strlen(file_info.name) + 1;
+		segment[2] = file_name_size;
+		memcpy(&(segment[3]), file_info.name, file_name_size);
+		segment[3+file_name_size] = PACKAGE_T_SIZE;
+		segment[4+file_name_size] = sizeof(long);
+		*((long *)&(segment[5+file_name_size])) = file_info.size;
+
+		int i;
+
+		for(i= 0; i < 5+file_name_size+sizeof(long);i++){
+			printf("0x%x ",segment[i]);
+		}
+		printf("\n");
+		//Send start
+		//Send data
+		//Send end
+		segment[0] = PACKAGE_END;
+		segment[1] = PACKAGE_T_NAME;
+		unsigned char file_name_size = strlen(file_info.name) + 1;
+		segment[2] = file_name_size;
+		memcpy(&(segment[3]), file_info.name, file_name_size);
+		segment[3+file_name_size] = PACKAGE_T_SIZE;
+		segment[4+file_name_size] = sizeof(long);
+		*((long *)&(segment[5+file_name_size])) = file_info.size;
+		
+	} else if (flag == RECEIVER) {
+		// Read start
+		// Create file
+		// Read data
+		// Find end
+	}
+
 	lldelete(link_layer);
 
 	return 0;
