@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
+#include <string.h>
 
 #define BAUDRATE B38400
 #define PACKAGE_DATA 0
@@ -100,7 +101,6 @@ int main(int argc, char** argv){
 		//Send end
 		segment[0] = PACKAGE_END;
 		segment[1] = PACKAGE_T_NAME;
-		unsigned char file_name_size = strlen(file_info.name) + 1;
 		segment[2] = file_name_size;
 		memcpy(&(segment[3]), file_info.name, file_name_size);
 		segment[3+file_name_size] = PACKAGE_T_SIZE;
