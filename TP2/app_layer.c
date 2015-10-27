@@ -40,7 +40,7 @@ int get_file_info(File_info_t* file_info, char* filePath){
 
 int main(int argc, char** argv){
 
-	if(argc != 6){
+	if(argc != 7){
 		printf("Usage: %s <port> <filepath> <baudrate> <max_tries> <timeout> <max_frame_size>\n", argv[0]);
 		return 1;
 	}
