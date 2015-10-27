@@ -94,7 +94,7 @@ int main(int argc, char** argv){
 		int i;
 
 		for(i= 0; i < file_name_size+7;i++){
-			printf("0x%ux ",segment[i]);
+			printf("0x%x ",segment[i]);
 		}
 		printf("\n");
 		//Send start
