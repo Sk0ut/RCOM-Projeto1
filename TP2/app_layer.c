@@ -68,8 +68,8 @@ int main(int argc, char** argv){
 		printf("Fd: %d, Name: %s, Size:%ld\n", file_info.fd, file_info.name, file_info.size);
 	}
 
-
-
+	unsigned int segmentSize = get_max_message_size(link_layer) - 4;
+	printf("Segment size: %d\n",segmentSize);
 	lldelete(link_layer);
 
 	return 0;
