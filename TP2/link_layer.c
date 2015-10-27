@@ -524,7 +524,6 @@ int llclose_receiver(LinkLayer link_layer) {
 }
 
 int llread(LinkLayer link_layer, char *buf){
-	int iType;
 	int length;
 
     while (1) {

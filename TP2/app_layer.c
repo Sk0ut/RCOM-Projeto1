@@ -1,5 +1,8 @@
 #include "linklayer.h"
 
+#include <stdio.h>
+#include <fcntl.h>
+
 
 typedef struct {
 	int fd;
