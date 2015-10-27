@@ -87,12 +87,13 @@ int main(int argc, char** argv){
 		segment[2] = file_name_size;
 		memcpy(&(segment[3]), file_info.name, file_name_size);
 		segment[3+file_name_size] = PACKAGE_T_SIZE;
-		segment[4+file_name_size] = sizeof(long);
-		*((long *)&(segment[5+file_name_size])) = file_info.size;
+		segment[4+file_name_size] = 2;
+		segment[5+file_name_size] = (file_info.size && 0xFF00) >> 8;
+		segment[6+file_name_size] = (file_info.size && 0xFF);
 
 		int i;
 
-		for(i= 0; i < 5+file_name_size+sizeof(long);i++){
+		for(i= 0; i < file_name_size+7;i++){
 			printf("0x%x ",segment[i]);
 		}
 		printf("\n");
