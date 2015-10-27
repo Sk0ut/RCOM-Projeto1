@@ -57,16 +57,23 @@ int app_transmitter(int argc, char **argv) {
 	int max_tries = 3;
 	int timeout = 3;
 	int max_frame_size = 255;
-	char* filePath = argv[2];
+	char* filePath = argv[3];
 
 	sscanf(argv[2],"/dev/ttyS%d",&port);
 	sscanf(argv[5], "%d", &max_tries);
 	sscanf(argv[6], "%d", &timeout);
 	sscanf(argv[7], "%d", &max_frame_size);
 
-
 	LinkLayer link_layer = llinit(port, flag, baudrate, max_tries, timeout, max_frame_size);
-
+	printf("port: %d\n", port);
+	printf("flag: %d\n", flag);
+	printf("baudrate: %d\n", baudrate);
+	printf("max_tries: %d\n", max_tries);
+	printf("timeout: %d\n", timeout);
+	printf("max_frame_size: %d\n", max_frame_size);
+	printf("filepath: %s\n", filePath);
+	
+	
 	if(get_file_info(&file_info, filePath) == -1)
 		return 1;
 	printf("Fd: %d, Name: %s, Size:%ld\n", file_info.fd, file_info.name, file_info.size);
