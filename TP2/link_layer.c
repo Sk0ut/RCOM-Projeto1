@@ -532,10 +532,8 @@ int llread(LinkLayer link_layer, char *buf){
         if (length <= 0)
             continue;        
         printf("Validating string\n");
-        if(is_valid_string(link_layer->buffer,length)){
-        	iType = i_frame_type(link_layer,link_layer->buffer,length);
+        if(is_valid_string(link_layer->buffer,length))
            	break;
-        }
    	}
 
 
