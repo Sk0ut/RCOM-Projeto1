@@ -118,22 +118,8 @@ int is_valid_i(const char* string, int string_length){
 
 	return TRUE;
 }
- /* Determina o tipo de trama I e valida o BCC2.*/
-int i_frame_type(char* buffer, int string_length){
-	char iType;
 
-	iType = buffer[C_FLAG_INDEX];
-
-	if(bcc2 != buffer[string_length-1])
-		if(iType == SERIAL_I_C_N0)
-			return SERIAL_C_REJ_N0;
-		else
-			return SERIAL_C_REJ_N1;
-
-	return iType;
-}
-
-int i_valid_bcc2(Linklayer link_layer, char* buffer, int string_length){
+int i_valid_bcc2(LinkLayer link_layer, char* buffer, int string_length){
 	int bcc2 = 0;
 	int i;
 
@@ -547,7 +533,7 @@ int llread(LinkLayer link_layer, char *buf){
             continue;        
         printf("Validating string\n");
         if(is_valid_string(link_layer->buffer,length)){
-        	iType = i_frame_type(link_layer,link_layer->buf,length);
+        	iType = i_frame_type(link_layer,link_layer->buffer,length);
            	break;
         }
    	}
