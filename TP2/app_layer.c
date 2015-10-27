@@ -60,7 +60,7 @@ int main(int argc, char** argv){
 	sscanf(argv[6], "%d", &max_frame_size);
 
 
-	Linklayer link_layer = llinit(port, flag, max_tries, timeout, max_frame_size);
+	LinkLayer link_layer = llinit(port, flag, baudrate, max_tries, timeout, max_frame_size);
 
 	if (flag == TRANSMITTER){
 		if(get_file_info(&file_info, filePath) == -1)
