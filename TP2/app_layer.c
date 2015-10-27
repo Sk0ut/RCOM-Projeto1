@@ -96,6 +96,7 @@ int app_transmitter(int argc, char **argv) {
 
 	int i;
 
+	printf("Control package: ");
 	for(i= 0; i < file_name_size+7;i++){
 		printf("0x%x ",segment[i]);
 	}
@@ -104,6 +105,7 @@ int app_transmitter(int argc, char **argv) {
 	//Send data
 	int length;
 	unsigned char sequenceNumber = 0;
+	printf("Data packages:\n");
 	do {
 		length = read(file_info.fd, &(segment[4]), segmentSize);
 		
@@ -114,8 +116,8 @@ int app_transmitter(int argc, char **argv) {
 			segment[3] = length & 0xFF;
 			// send segment;
 			int j;
-			for (j = 0; j < length + 4; ++i)
-				printf("0x%.2x ", segment[i]);
+			for (j = 0; j < length + 4; ++j)
+				printf("0x%.2x ", segment[j]);
 			printf("\n");
 			++sequenceNumber;
 		}
