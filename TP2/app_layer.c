@@ -106,8 +106,8 @@ int app_transmitter(int argc, char **argv) {
 			segment[2] = (length & 0xFF00) >> 8;
 			segment[3] = length & 0xFF;
 			// send segment;
-			int i;
-			for (i = 0; i < length + 4; ++i)
+			int j;
+			for (j = 0; j < length + 4; ++i)
 				printf("0x%.2x ", segment[i]);
 			printf("\n");
 			++sequenceNumber;
