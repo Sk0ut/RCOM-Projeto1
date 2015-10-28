@@ -75,8 +75,6 @@ int is_a_flag(const char a){
 
 /* Validates c flag */
 int is_c_flag(const char c){
-	printf("c flag: 0x%.2x", c);
-	printf("c flag|C_FLAG_R_VALUE: 0x%.2x", c | C_FLAG_R_VALUE);
 	switch(c){
 		case SERIAL_C_SET:
 		case SERIAL_C_DISC:
@@ -104,22 +102,22 @@ int is_valid_i(const char* string, int string_length){
 	printf("I string validation\n");
 	if(string_length < 5) //Pressupoe que e mandado pelo menos 1 byte de data
 		return FALSE;
-	printf("Valid length\n");
+	//printf("Valid length\n");
 		
 	if(!is_a_flag(string[A_FLAG_INDEX])){
 		return FALSE;
 	}
-	printf("Valid A flag\n");
+	//printf("Valid A flag\n");
 
 	if(!is_c_flag(string[C_FLAG_INDEX])){
 		return FALSE;
 	}
-	printf("Valid C flag\n");
+	//printf("Valid C flag\n");
 
 	if(!is_valid_bcc(string[A_FLAG_INDEX],string[C_FLAG_INDEX], string[BCC_FLAG_INDEX])){
 		return FALSE;
 	}
-	printf("Valid BCC\n");
+	//printf("Valid BCC\n");
 
 	return TRUE;
 }

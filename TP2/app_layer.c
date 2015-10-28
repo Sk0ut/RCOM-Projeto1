@@ -19,7 +19,7 @@
 typedef struct {
 	int fd;
 	char name[255];
-	long size;
+	int size;
 } File_info_t;
 
 
@@ -89,9 +89,8 @@ int app_transmitter(int argc, char **argv) {
 	segment[2] = file_name_size;
 	memcpy(&(segment[3]), file_info.name, file_name_size);
 	segment[3+file_name_size] = PACKAGE_T_SIZE;
-	segment[4+file_name_size] = 2;
-	segment[5+file_name_size] = (file_info.size & 0xFF00) >> 8;
-	segment[6+file_name_size] = (file_info.size & 0xFF);
+	segment[4+file_name_size] = 4;
+	*((int *)segment[5+file_name_size]) = file_info.size;
 
 	int i;
 
@@ -181,10 +180,29 @@ int app_receiver(int argc, char **argv) {
 
 	printf("llread\n");
 	int segmentLength = llread(link_layer, segment);
-
+	
 	if (segmentLength <= 0) {
 		printf("Error llread");
 		return 1;
+	}
+	
+	File_info_t file_info;
+	
+	if(segment[0] == PACKAGE_START){
+		int i=1;
+		while(i < segmentLength){
+			char type = segment[i];
+			unsigned char size = segment[i+1];
+			switch(type){
+				case PACKAGE_T_SIZE:
+					file_info.size = *((int *) segment[i+2]);
+					break;
+				case PACKAGE_T_NAME:
+					memcpy(file_info.name,&segment[i+2],size);
+					break;
+			}
+			i += 2 + size;
+		}
 	}
 
 	int i;
