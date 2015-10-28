@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <string.h>
+#include <stdint.h>
 
 #define BAUDRATE B38400
 #define PACKAGE_DATA 0
@@ -19,7 +20,7 @@
 typedef struct {
 	int fd;
 	char name[255];
-	int size;
+	uint32_t size;
 } File_info_t;
 
 
@@ -85,14 +86,14 @@ int app_transmitter(int argc, char **argv) {
 	// Build Control package
 	segment[0] = PACKAGE_START;
 	segment[1] = PACKAGE_T_NAME;
-	unsigned char file_name_size = strlen(file_info.name) + 1;
+	uint8_t file_name_size = strlen(file_info.name) + 1;
 	printf("file name size: %d\n", file_name_size);
 	segment[2] = file_name_size;
 	memcpy(&(segment[3]), file_info.name, file_name_size);
 	printf("File name: %s\n", &(segment[3]));
 	segment[3+file_name_size] = PACKAGE_T_SIZE;
-	segment[4+file_name_size] = 4;
-	*((int *)&segment[5+file_name_size]) = file_info.size;
+	segment[4+file_name_size] = sizeof(uint32_t);
+	*((uint32_t *)&segment[5+file_name_size]) = file_info.size;
 	printf("File size: %d\n", *((int *)&(segment[5+file_name_size])));
 	
 	int i;
@@ -140,8 +141,8 @@ int app_transmitter(int argc, char **argv) {
 	segment[2] = file_name_size;
 	memcpy(&(segment[3]), file_info.name, file_name_size);
 	segment[3+file_name_size] = PACKAGE_T_SIZE;
-	segment[4+file_name_size] = 4;
-	*((int *)&segment[5+file_name_size]) = file_info.size;
+	segment[4+file_name_size] = sizeof(uint32_t);
+	*((uint32_t *)&segment[5+file_name_size]) = file_info.size;
 
 
 	/*
@@ -215,7 +216,7 @@ int app_receiver(int argc, char **argv) {
 			unsigned char size = segment[i+1];
 			switch(type){
 				case PACKAGE_T_SIZE:
-					file_info.size = *((int *) &segment[i+2]);
+					file_info.size = *((uint32_t *) &segment[i+2]);
 					printf("File info size: %d", file_info.size);
 					break;
 				case PACKAGE_T_NAME:
