@@ -553,6 +553,7 @@ int llread(LinkLayer link_layer, char *buf){
 				ans[0] = SERIAL_A_ANS_RECEIVER;
 				ans[1] = SERIAL_C_UA;
 				ans[2] = ans[0] ^ ans[1];
+				write_frame(link_layer, ans, 3);
 			}
 			continue;
 		}
@@ -560,24 +561,23 @@ int llread(LinkLayer link_layer, char *buf){
 	    if(i_valid_bcc2(link_layer, link_layer->buffer,length) && is_expected_i(link_layer, link_layer->buffer))
 	    	break;
 
-    	ans[0] = SERIAL_A_ANS_RECEIVER;
-
+		ans[0] = SERIAL_A_ANS_RECEIVER;
     	if(is_expected_i(link_layer, link_layer->buffer))
     		ans[1] = link_layer->sequence_number == 0 ? SERIAL_C_REJ_N0 : SERIAL_C_REJ_N1;
     	else
     		ans[1] = link_layer->sequence_number == 0 ? SERIAL_C_RR_N0 : SERIAL_C_RR_N1;
-    	
     	ans[2] = ans[0] ^ ans[1];
 
+		printf("Sending REJ\n");
     	write_frame(link_layer, ans, 3);
    	}
-
 	memcpy(buf, &(link_layer->buffer[3]), length-4);
 	
    	ans[0] = SERIAL_A_ANS_RECEIVER;
    	ans[1] = link_layer->sequence_number == 0 ? SERIAL_C_RR_N1 : SERIAL_C_RR_N0;
 	ans[2] = ans[0] ^ ans[1];
 
+	printf("Sending RR\n");
 	write_frame(link_layer,ans,3);
 
 	link_layer->sequence_number = 1 - link_layer->sequence_number;
