@@ -99,11 +99,13 @@ int app_transmitter(int argc, char **argv) {
 		printf("0x%x ",segment[i]);
 	}
 	printf("\n");
+
 	//Send start
 	if (llwrite(link_layer, segment, file_name_size + 7) != file_name_size + 7) {
-		printf("Error llwrite\n");
+		printf("Error sending start control package\n");
 		return 1;
 	}
+
 	//Send data
 	int length;
 	unsigned char sequenceNumber = 0;
@@ -116,7 +118,10 @@ int app_transmitter(int argc, char **argv) {
 			segment[1] = sequenceNumber;
 			segment[2] = (length & 0xFF00) >> 8;
 			segment[3] = length & 0xFF;
-			// send segment;
+			if(llwrite(link_layer,segment, length+4) != length + 4){
+				printf("Error in sending data package");
+				return 1;
+			}
 			int j;
 			for (j = 0; j < length + 4; ++j)
 				printf("0x%.2x ", segment[j]);
@@ -124,7 +129,6 @@ int app_transmitter(int argc, char **argv) {
 			++sequenceNumber;
 		}
 	} while (length > 0);
-	
 		
 	//Send end
 	segment[0] = PACKAGE_END;
@@ -136,6 +140,10 @@ int app_transmitter(int argc, char **argv) {
 	segment[5+file_name_size] = (file_info.size & 0xFF00) >> 8;
 	segment[6+file_name_size] = (file_info.size & 0xFF);
 
+	if (llwrite(link_layer, segment, file_name_size + 7) != file_name_size + 7) {
+		printf("Error starting end control packages\n");
+		return 1;
+	}
 	
 	if (llclose(link_layer) != 0)
 		return 1;
@@ -196,9 +204,11 @@ int app_receiver(int argc, char **argv) {
 			switch(type){
 				case PACKAGE_T_SIZE:
 					file_info.size = *((int *) segment[i+2]);
+					printf("File info size: %d", file_info.size);
 					break;
 				case PACKAGE_T_NAME:
 					memcpy(file_info.name,&segment[i+2],size);
+					printf("File info name: %s", file_info.name);
 					break;
 			}
 			i += 2 + size;
