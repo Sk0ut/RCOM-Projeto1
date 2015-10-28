@@ -73,7 +73,7 @@ int app_transmitter(int argc, char **argv) {
 	
 	if(get_file_info(&file_info, filePath) == -1)
 		return 1;
-	printf("Fd: %d, Name: %s, Size:%ld\n", file_info.fd, file_info.name, file_info.size);
+	printf("Fd: %d, Name: %s, Size:%d\n", file_info.fd, file_info.name, file_info.size);
 
 	if (llopen(link_layer) != 0)
 		return 1;
