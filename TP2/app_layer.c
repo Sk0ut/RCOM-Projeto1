@@ -215,7 +215,7 @@ int app_receiver(int argc, char **argv) {
 			unsigned char size = segment[i+1];
 			switch(type){
 				case PACKAGE_T_SIZE:
-					file_info.size = *((int *) segment[i+2]);
+					file_info.size = *((int *) &segment[i+2]);
 					printf("File info size: %d", file_info.size);
 					break;
 				case PACKAGE_T_NAME:
