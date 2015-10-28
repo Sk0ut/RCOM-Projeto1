@@ -581,7 +581,7 @@ int llread(LinkLayer link_layer, char *buf){
    	return length-4;
 }
 
-int llwrite(LinkLayer link_layer, char* buf, int length, int iFlag){
+int llwrite(LinkLayer link_layer, char* buf, int length){
 	int iLength = length+4;
 	char frame[length + 4];
 
