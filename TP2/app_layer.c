@@ -117,7 +117,7 @@ int app_transmitter(int argc, char **argv) {
 
 	int arg;
 	int changeMask[] = {FALSE, FALSE, FALSE, FALSE};
-	for(arg = 4; arg < argc; ++arg){
+	for(arg = 3; arg < argc; ++arg){
 		if(strcmp(argv[arg],"-b") == 0)
 				if(changeMask[0] == FALSE){
 					changeMask[0] = TRUE;
@@ -307,7 +307,7 @@ int app_receiver(int argc, char **argv) {
 
 	int arg;
 	int changeMask[] = {FALSE, FALSE, FALSE, FALSE};
-	for(arg = 4; arg < argc; ++arg){
+	for(arg = 3; arg < argc; ++arg){
 		if(strcmp(argv[arg],"-b") == 0){
 			if(changeMask[0] == FALSE){
 				changeMask[0] = TRUE;
