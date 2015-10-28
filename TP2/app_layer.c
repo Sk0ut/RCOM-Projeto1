@@ -141,7 +141,7 @@ int app_transmitter(int argc, char **argv) {
 	memcpy(&(segment[3]), file_info.name, file_name_size);
 	segment[3+file_name_size] = PACKAGE_T_SIZE;
 	segment[4+file_name_size] = 4;
-	*((int *)segment[5+file_name_size]) = file_info.size;
+	*((int *)&segment[5+file_name_size]) = file_info.size;
 
 
 	/*
