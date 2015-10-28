@@ -403,8 +403,9 @@ int app_receiver(int argc, char **argv) {
 	
 	// Read start
 	unsigned int maxSegmentLength = get_max_message_size(link_layer);
+	char startSegment[maxSegmentLength];
 	char segment[maxSegmentLength];
-	int segmentLength = llread(link_layer, segment);
+	int segmentLength = llread(link_layer, startSegment);
 	
 	if (segmentLength <= 0) {
 		printf("Error llread\n");
@@ -414,7 +415,7 @@ int app_receiver(int argc, char **argv) {
 	int i;
 	printf("Read:");
 	for (i = 0; i < segmentLength; ++i)
-		printf(" 0x%.2x", segment[i]);
+		printf(" 0x%.2x", startSegment[i]);
 	printf("\n");
 	
 	File_info_t file_info;
@@ -422,24 +423,30 @@ int app_receiver(int argc, char **argv) {
 	if(segment[0] == PACKAGE_START){
 		i=1;
 		while(i < segmentLength){
-			char type = segment[i];
-			unsigned char size = segment[i+1];
+			char type = startSegment[i];
+			unsigned char size = startSegment[i+1];
 			switch(type){
 				case PACKAGE_T_SIZE:
-					file_info.size = *((uint32_t *) &segment[i+2]);
+					file_info.size = *((uint32_t *) &startSegment[i+2]);
 					printf("File info size: %d\n", file_info.size);
 					break;
 				case PACKAGE_T_NAME:
-					memcpy(file_info.name,&segment[i+2],size);
+					memcpy(file_info.name,&startSegment[i+2],size);
 					printf("File info name: %s\n", file_info.name);
 					break;
 			}
 			i += 2 + size;
 		}
 	}
+	else {
+		printf("Start package missing.\n");
+		return 1;
+	}
 
 	// Create file
 	file_info.fd = creat(file_info.name, 0666);
+	uint32_t reported_size = 0;
+	uint8_t sequenceNumber = 0;
 	while (1) {
 		segmentLength = llread(link_layer, segment);
 	
@@ -456,8 +463,34 @@ int app_receiver(int argc, char **argv) {
 		if (segment[0] == PACKAGE_END)
 			break;
 		
-		// copy to file
-		write(file_info.fd, &(segment[4]), segmentLength - 4);
+		if (segment[0] == PACKAGE_START){
+			printf("Received duplicate start package\n");
+			return 1;
+		}
+
+		if (segment[0] == PACKAGE_DATA) {// copy to file
+			if (segmentLength < 4) {
+				printf("Wrong size for segment\n");
+				return 1;
+			}
+			uint16_t package_data_size = segment[2] << 8 | segment[3];
+			if (package_data_size != segmentLength - 4) {
+				printf("Reported package size and received size differ\n");
+				return 1;
+			}
+
+			write(file_info.fd, &(segment[4]), package_data_size);
+			reported_size += package_data_size;
+		}
+		else {
+			printf("Received unknown package type\n");
+			return 1;
+		}
+	}
+
+
+	if(reported_size != file_info.size){
+		printf("Error: Reported size (%d bytes) differs from expected size (%d bytes)\n", reported_size, file_info.size);
 	}
 
 	if (close(file_info.fd) != 0)
