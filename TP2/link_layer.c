@@ -104,18 +104,22 @@ int is_valid_combination(const char a, const char c){
 int is_valid_i(const char* string, int string_length){
 	if(string_length < 5) //Pressupoe que e mandado pelo menos 1 byte de data
 		return FALSE;
-
+	printf("Valid length\n");
+		
 	if(!is_a_flag(string[A_FLAG_INDEX])){
 		return FALSE;
 	}
+	printf("Valid A flag\n");
 
 	if(!is_c_flag(string[C_FLAG_INDEX])){
 		return FALSE;
 	}
+	printf("Valid C flag\n");
 
 	if(!is_valid_bcc(string[A_FLAG_INDEX],string[C_FLAG_INDEX], string[BCC_FLAG_INDEX])){
 		return FALSE;
 	}
+	printf("Valid BCC\n");
 
 	return TRUE;
 }
