@@ -631,7 +631,7 @@ int llwrite(LinkLayer link_layer, char* buf, int length){
 			printf("Valid string");
         	if(length != 3)
         		continue;
-			printf("U frame\n")
+			printf("U frame\n");
         	if(rr_validator(link_layer->buffer, ansLength)) {
         		printf("RR frame\n");
 				break;
