@@ -86,6 +86,7 @@ int app_transmitter(int argc, char **argv) {
 	segment[0] = PACKAGE_START;
 	segment[1] = PACKAGE_T_NAME;
 	unsigned char file_name_size = strlen(file_info.name) + 1;
+	printf("file name size: %d\n", file_name_size);
 	segment[2] = file_name_size;
 	memcpy(&(segment[3]), file_info.name, file_name_size);
 	segment[3+file_name_size] = PACKAGE_T_SIZE;
