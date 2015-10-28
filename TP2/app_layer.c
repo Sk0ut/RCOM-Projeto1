@@ -485,6 +485,10 @@ int app_receiver(int argc, char **argv) {
 				return 1;
 			}
 
+			printf("Package data size: %s\n", package_data_size);
+			printf("Segment Length - 4 %s\n", segmentLength - 4));
+
+
 			write(file_info.fd, &(segment[4]), package_data_size);
 			reported_size += package_data_size;
 			++sequenceNumber;
