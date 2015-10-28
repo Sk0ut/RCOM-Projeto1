@@ -482,11 +482,10 @@ int app_receiver(int argc, char **argv) {
 			uint16_t package_data_size = segment[2] << 8 | segment[3];
 			if (package_data_size != segmentLength - 4) {
 				printf("Reported package size and received size differ\n");
+				printf("Package data size: %d\n", package_data_size);
+				printf("Segment Length - 4 %d\n", (segmentLength - 4));
 				return 1;
 			}
-
-			printf("Package data size: %d\n", package_data_size);
-			printf("Segment Length - 4 %d\n", (segmentLength - 4));
 
 
 			write(file_info.fd, &(segment[4]), package_data_size);
