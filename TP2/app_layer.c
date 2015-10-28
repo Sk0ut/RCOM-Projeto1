@@ -460,8 +460,8 @@ int main(int argc, char** argv){
 
 	if (argc == 1)
 	{
-		printf("Usage: %s RECEIVER /dev/ttyS<portNr> <baudrate> <max_tries> <timeout> <max_frame_size>\n", argv[0]);
-		printf("Usage: %s TRANSMITTER /dev/ttyS<portNr> <filepath> <baudrate> <max_tries> <timeout> <max_frame_size>\n", argv[0]);
+		print_usage(TRANSMITTER, argv[0]);
+		print_usage(RECEIVER, argv[0]);
 		return 1;
 	}
 
@@ -471,8 +471,8 @@ int main(int argc, char** argv){
 		return app_receiver(argc, argv);
 	else
 	{
-		printf("Usage: %s RECEIVER /dev/ttyS<portNr> <baudrate> <max_tries> <timeout> <max_frame_size>\n", argv[0]);
-		printf("Usage: %s TRANSMITTER /dev/ttyS<portNr> <filepath> <baudrate> <max_tries> <timeout> <max_frame_size>\n", argv[0]);
+		print_usage(TRANSMITTER, argv[0]);
+		print_usage(RECEIVER, argv[0]);
 		return 1;
 	}
 }
