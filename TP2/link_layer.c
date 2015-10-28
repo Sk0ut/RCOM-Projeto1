@@ -237,8 +237,10 @@ int read_frame(LinkLayer link_layer) {
 			++length;
 		} while(length < link_layer->max_frame_size);
 
-		if (length == link_layer->max_frame_size)
+		if (length == link_layer->max_frame_size) {
+			printf("frame exceeded max size\n");
 			return -1;
+		}
 	}
 
 	int i;
