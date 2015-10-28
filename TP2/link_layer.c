@@ -294,7 +294,6 @@ int write_frame(LinkLayer link_layer, char* buffer, unsigned int length) {
             	return ret;
             break;
         }
-        printf("Wrote: %x\n", buffer[i]);
         ++ret;
 	}
 	

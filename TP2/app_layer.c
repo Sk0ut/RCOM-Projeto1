@@ -403,8 +403,8 @@ int app_receiver(int argc, char **argv) {
 	
 	// Read start
 	unsigned int maxSegmentLength = get_max_message_size(link_layer);
-	char startSegment[maxSegmentLength];
-	char segment[maxSegmentLength];
+	uint8_t startSegment[maxSegmentLength];
+	uint8_t segment[maxSegmentLength];
 	int segmentLength = llread(link_layer, startSegment);
 	int startSegmentLength = segmentLength;
 
