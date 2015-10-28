@@ -27,7 +27,7 @@
 #define C_FLAG_INDEX	1
 #define BCC_FLAG_INDEX 	2
 
-#define C_FLAG_R_VALUE	(1<<5)
+#define C_FLAG_R_VALUE	0x20
 
 #define RR0		0
 #define RR1 	1
