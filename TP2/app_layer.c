@@ -95,13 +95,13 @@ int app_transmitter(int argc, char **argv) {
 	int i;
 
 	printf("Control package: ");
-	for(i= 0; i < file_name_size+7;i++){
+	for(i= 0; i < file_name_size+9;i++){
 		printf("0x%x ",segment[i]);
 	}
 	printf("\n");
 
 	//Send start
-	if (llwrite(link_layer, segment, file_name_size + 7) != file_name_size + 7) {
+	if (llwrite(link_layer, segment, file_name_size + 9) != file_name_size + 9) {
 		printf("Error sending start control package\n");
 		return 1;
 	}
@@ -137,10 +137,10 @@ int app_transmitter(int argc, char **argv) {
 	memcpy(&(segment[3]), file_info.name, file_name_size);
 	segment[3+file_name_size] = PACKAGE_T_SIZE;
 	segment[4+file_name_size] = 4;
-	segment[5+file_name_size] = (file_info.size & 0xFF00) >> 8;
-	segment[6+file_name_size] = (file_info.size & 0xFF);
+	*((int *)segment[5+file_name_size]) = file_info.size;
 
-	if (llwrite(link_layer, segment, file_name_size + 7) != file_name_size + 7) {
+
+	if (llwrite(link_layer, segment, file_name_size + 9) != file_name_size + 9) {
 		printf("Error starting end control packages\n");
 		return 1;
 	}
