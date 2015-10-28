@@ -41,13 +41,26 @@ int get_file_info(File_info_t* file_info, char* filePath){
 	return 0;
 }
 
+void printUsage(int flag, char* argv0){
+	if(flag == TRANSMITTER)
+		printf("Usage: %s TRANSMITTER /dev/ttyS<portNo> <filepath> <flags>\n", argv0);
+	else
+		printf("Usage: %s RECEIVER /dev/ttyS<portNo> <flags>\n", argv0);
+	printf("Flags: -b [BAUDRATE] - Sets the baudrate.\n");
+	printf("       -t [TIMEOUT] - Sets the timeout before attempting to retransmit (default: 3).\n");
+	printf("       -m [MAXTRIES] - Sets the maximum mumber of tries to transmit a message (default: 3). \n");
+	printf("       -i [MAX_I_FRAME_SIZE] - Sets the maximum I frame size (before stuffing) (default: 255).\n");
+}
+
 int app_transmitter(int argc, char **argv) {
-	if(argc != 8){
-		printf("Usage: %s TRANSMITTER /dev/ttyS<portNr> <filepath> <baudrate> <max_tries> <timeout> <max_frame_size>\n", argv[0]);
+
+	int flag = TRANSMITTER;
+
+	if(argc < 4){
+		printUsage(flag, argv[0]);
 		return 1;
 	}
 
-	int flag = TRANSMITTER;
 	File_info_t file_info;
 	int port;
 	int baudrate = BAUDRATE;
@@ -56,10 +69,55 @@ int app_transmitter(int argc, char **argv) {
 	int max_frame_size = 255;
 	char* filePath = argv[3];
 
-	sscanf(argv[2],"/dev/ttyS%d",&port);
-	sscanf(argv[5], "%d", &max_tries);
-	sscanf(argv[6], "%d", &timeout);
-	sscanf(argv[7], "%d", &max_frame_size);
+	int arg;
+	int changeMask[] = {FALSE, FALSE, FALSE, FALSE};
+	for(arg = 4; arg < argc; ++arg){
+		switch(argv[i]){
+			case "-b":
+				if(changeMask[0] == FALSE){
+					changeMask[0] == TRUE;
+					sscanf(argv[++arg], "%d", &baudrate);
+					break;
+				}
+				else {
+					printf("Baudrate defined more than once. First defined as value: %d\n", baudrate);
+					return 1;
+				}
+			case "-t":			
+				if(changeMask[1] == FALSE){
+					changeMask[1] == TRUE;
+					sscanf(argv[++arg], "%d", &timeout);
+					break;
+				}
+				else {
+					printf("Timeout defined more than once. First defined as value: %d\n", timeout);
+					return 1;
+				}
+			case "-m":
+				if(changeMask[2] == FALSE){
+					changeMask[2] == TRUE;
+					sscanf(argv[++arg], "%d", &max_tries);
+					break;
+				}
+				else {
+					printf("Maximum retransmission tries cap defined more than once. First defined as value %d\n", max_tries);
+					return 1;
+				}
+			case "-i":
+				if(changeMask[3] == FALSE){
+					changeMask[3] == TRUE;
+					sscanf(argv[++arg], "%d", &max_frame_size);
+					break;
+				}
+				else {
+					printf("Maximum I frame size defined more than once. First defined as value %d\n", max_frame_size);
+					return 1;
+				}
+			default:
+
+		}
+
+	}
 
 	LinkLayer link_layer = llinit(port, flag, baudrate, max_tries, timeout, max_frame_size);
 	printf("port: %d\n", port);
@@ -161,22 +219,69 @@ int app_transmitter(int argc, char **argv) {
 }
 
 int app_receiver(int argc, char **argv) {
-	if (argc != 7) {
-		printf("Usage: %s RECEIVER /dev/ttyS<portNr> <baudrate> <max_tries> <timeout> <max_frame_size>\n", argv[0]);
+
+	int flag = RECEIVER;
+
+	if (argc < 3) {
+		printUsage(flag, argv[0]);
 		return 1;
 	}
-	
-	int flag = RECEIVER;
+
 	int port;
 	int baudrate = BAUDRATE;
 	int max_tries = 3;
 	int timeout = 3;
 	int max_frame_size = 255;
 
-	sscanf(argv[2],"/dev/ttyS%d",&port);
-	sscanf(argv[4], "%d", &max_tries);
-	sscanf(argv[5], "%d", &timeout);
-	sscanf(argv[6], "%d", &max_frame_size);
+	int arg;
+	int changeMask[] = {FALSE, FALSE, FALSE, FALSE};
+	for(arg = 4; arg < argc; ++arg){
+		switch(argv[i]){
+			case "-b":
+				if(changeMask[0] == FALSE){
+					changeMask[0] == TRUE;
+					sscanf(argv[++arg], "%d", &baudrate);
+					break;
+				}
+				else {
+					printf("Baudrate defined more than once. First defined as value: %d\n", baudrate);
+					return 1;
+				}
+			case "-t":			
+				if(changeMask[1] == FALSE){
+					changeMask[1] == TRUE;
+					sscanf(argv[++arg], "%d", &timeout);
+					break;
+				}
+				else {
+					printf("Timeout defined more than once. First defined as value: %d\n", timeout);
+					return 1;
+				}
+			case "-m":
+				if(changeMask[2] == FALSE){
+					changeMask[2] == TRUE;
+					sscanf(argv[++arg], "%d", &max_tries);
+					break;
+				}
+				else {
+					printf("Maximum retransmission tries cap defined more than once. First defined as value %d\n", max_tries);
+					return 1;
+				}
+			case "-i":
+				if(changeMask[3] == FALSE){
+					changeMask[3] == TRUE;
+					sscanf(argv[++arg], "%d", &max_frame_size);
+					break;
+				}
+				else {
+					printf("Maximum I frame size defined more than once. First defined as value %d\n", max_frame_size);
+					return 1;
+				}
+			default:
+
+		}
+
+	}
 
 	LinkLayer link_layer = llinit(port, flag, baudrate, max_tries, timeout, max_frame_size);
 	printf("port: %d\n", port);
