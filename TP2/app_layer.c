@@ -113,6 +113,8 @@ int app_transmitter(int argc, char **argv) {
 	int max_frame_size = 255;
 	char* filePath = argv[3];
 
+	sscanf(argv[2],"/dev/ttyS%d",&port);
+
 	int arg;
 	int changeMask[] = {FALSE, FALSE, FALSE, FALSE};
 	for(arg = 4; arg < argc; ++arg){
@@ -300,6 +302,8 @@ int app_receiver(int argc, char **argv) {
 	int max_tries = 3;
 	int timeout = 3;
 	int max_frame_size = 255;
+
+	sscanf(argv[2],"/dev/ttyS%d",&port);
 
 	int arg;
 	int changeMask[] = {FALSE, FALSE, FALSE, FALSE};
