@@ -1,6 +1,7 @@
 #include "linklayer.h"
 #include "utils.h"
 
+#include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
 #include <termios.h>
@@ -8,6 +9,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 static int tries;
 
@@ -36,6 +38,10 @@ struct LinkLayer_t {
 	unsigned int sequence_number;
 	char* buffer;
 };
+
+int generate_error(){
+	return (rand()%5 == 0);
+}
 
 /* Validates string */
 int is_valid_string(const char* string, const int string_length){
@@ -303,6 +309,7 @@ LinkLayer llinit(int port, int flag, unsigned int baudrate, unsigned int max_tri
 	char port_name[20];
 	sprintf(port_name, "/dev/ttyS%d", port);
 	struct termios oldtio;
+	srand(time(NULL));
 	
 	int fd = open(port_name, O_RDWR | O_NOCTTY );
 	if (fd < 0) {
@@ -565,7 +572,7 @@ int llread(LinkLayer link_layer, char *buf){
 		}
 		
 		printf("I frame\n");
-	    if(i_valid_bcc2(link_layer, link_layer->buffer,length) && is_expected_i(link_layer, link_layer->buffer))
+	    if(i_valid_bcc2(link_layer, link_layer->buffer,length) && is_expected_i(link_layer, link_layer->buffer) && !generate_error())
 	    	break;
 
 		ans[0] = SERIAL_A_ANS_RECEIVER;
