@@ -410,6 +410,7 @@ int llopen_transmitter(LinkLayer link_layer) {
        	if (length != -1)
            	break;
     }
+	alarm(0);
     if (tries == link_layer->max_tries)    
        	return -1;
 
