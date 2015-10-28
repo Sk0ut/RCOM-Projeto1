@@ -245,7 +245,7 @@ int app_receiver(int argc, char **argv) {
 			break;
 		
 		// copy to file
-		write(file_info.fd, &(segment[4]), segmentLength);
+		write(file_info.fd, &(segment[4]), segmentLength - 4);
 	}
 
 	if (close(file_info.fd) != 0)
