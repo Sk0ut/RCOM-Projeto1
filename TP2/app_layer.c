@@ -227,6 +227,7 @@ int app_receiver(int argc, char **argv) {
 	}
 
 	// Create file
+	file_info.fd = creat(file_info.name, 0666);
 	while (1) {
 		segmentLength = llread(link_layer, segment);
 	
@@ -244,8 +245,11 @@ int app_receiver(int argc, char **argv) {
 			break;
 		
 		// copy to file
+		write(file_info.fd, &(segment[4]), segmentLength);
 	}
 
+	if (close(file_info.fd) != 0)
+		return 1;
 	
 	if (llclose(link_layer) != 0)
 		return 1;
