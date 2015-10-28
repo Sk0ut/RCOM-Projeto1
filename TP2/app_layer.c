@@ -118,11 +118,15 @@ int app_transmitter(int argc, char **argv) {
 	int arg;
 	int changeMask[] = {FALSE, FALSE, FALSE, FALSE};
 	for(arg = 3; arg < argc; ++arg){
+		if((arg +1) == argc) {
+			printf("Error while parsing flag %s \n", argv[arg]);
+			return 1;
+		}
 		if(strcmp(argv[arg],"-b") == 0)
 				if(changeMask[0] == FALSE){
 					changeMask[0] = TRUE;
 					if(sscanf(argv[++arg], "%d", &baudrate) != 1){
-						printf("Error while parsing flag\n");
+						printf("Error while parsing baudrate value \n");
 						return 1;
 					}
 					baudrate = parse_baudrate(baudrate);
