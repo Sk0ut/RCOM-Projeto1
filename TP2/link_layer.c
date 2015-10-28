@@ -551,7 +551,7 @@ int llread(LinkLayer link_layer, char *buf){
 			printf(" 0x%.2x", link_layer->buffer[i]);
 		printf("\n");
         printf("Validating string\n");
-        if(!is_valid_string(link_layer->buffer,length))
+        if(is_valid_string(link_layer->buffer,length) == FALSE)
         	continue;
 		printf("Valid Header\n");
 		
