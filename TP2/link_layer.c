@@ -592,8 +592,6 @@ int llwrite(LinkLayer link_layer, char* buf, int length, int iFlag){
 		bcc2^=buf[bufCounter];
 	}
 	frame[iLength-1] = bcc2;
-
-	// Fine till here
 	
 	int ansLength;
 	int resend;
