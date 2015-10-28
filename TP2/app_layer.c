@@ -486,7 +486,7 @@ int app_receiver(int argc, char **argv) {
 			}
 
 			printf("Package data size: %d\n", package_data_size);
-			printf("Segment Length - 4 %d\n", (segmentLength - 4);
+			printf("Segment Length - 4 %d\n", (segmentLength - 4));
 
 
 			write(file_info.fd, &(segment[4]), package_data_size);
