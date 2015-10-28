@@ -65,10 +65,8 @@ int is_valid_s_u(const char* string){
 /* Validates a flag */
 int is_a_flag(const char a){
 	switch(a){
-		case SERIAL_A_COM_TRANSMITTER:
-		case SERIAL_A_COM_RECEIVER:
-		case SERIAL_A_ANS_TRANSMITTER:
-		case SERIAL_A_ANS_RECEIVER:
+		case 0x01:
+		case 0x03:
 			return TRUE;
 		default:
 			return FALSE;
