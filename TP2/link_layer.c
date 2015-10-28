@@ -69,6 +69,8 @@ int is_a_flag(const char a){
 	switch(a){
 		case SERIAL_A_COM_TRANSMITTER:
 		case SERIAL_A_COM_RECEIVER:
+		case SERIAL_A_ANS_TRANSMITTER:
+		case SERIAL_A_ANS_RECEIVER:
 			return TRUE;
 		default:
 			return FALSE;
@@ -83,8 +85,8 @@ int is_c_flag(const char c){
 		case SERIAL_C_UA:
 			return TRUE;
 		default:
-			return (c|C_FLAG_R_VALUE)==SERIAL_C_RR_N0 || (c|C_FLAG_R_VALUE)==SERIAL_C_RR_N1 ||
-					(c|C_FLAG_R_VALUE)==SERIAL_C_REJ_N0 || (c|C_FLAG_R_VALUE)==SERIAL_C_REJ_N1;
+			return  (c|C_FLAG_R_VALUE)==SERIAL_C_RR_N1 ||
+					(c|C_FLAG_R_VALUE)==SERIAL_C_REJ_N1;
 	}
 }
 
