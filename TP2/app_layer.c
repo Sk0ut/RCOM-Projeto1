@@ -187,7 +187,7 @@ int app_receiver(int argc, char **argv) {
 	}
 
 	int i;
-	printf("Read:")
+	printf("Read:");
 	for (i = 0; i < segmentLength; ++i)
 		printf(" 0x%.2x", segment[i]);
 	printf("\n");

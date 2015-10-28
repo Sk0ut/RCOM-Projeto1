@@ -582,7 +582,7 @@ int llwrite(LinkLayer link_layer, char* buf, int length){
 	char frame[iLength];
 
 	frame[0] = SERIAL_A_COM_TRANSMITTER;
-	frame[1] = iFlag == I0 ? SERIAL_I_C_N0 : SERIAL_I_C_N1;
+	frame[1] = link_layer->sequence_number == 0 ? SERIAL_I_C_N0 : SERIAL_I_C_N1;
 	frame[2] = frame[0] ^ frame[1];
 
 	int bufCounter;
