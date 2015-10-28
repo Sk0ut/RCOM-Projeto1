@@ -39,12 +39,10 @@ struct LinkLayer_t {
 
 /* Validates string */
 int is_valid_string(const char* string, const int string_length){
-	if(string_length == 3){
+	if(string_length == 3)
 		return is_valid_s_u(string);
-	}
-	else {
+	else 
 		return is_valid_i(string, string_length);
-	}
 }
 
 /* Validates su flag*/
@@ -102,6 +100,7 @@ int is_valid_combination(const char a, const char c){
 
 /* Validates I String Header */
 int is_valid_i(const char* string, int string_length){
+	printf("I string validation\n");
 	if(string_length < 5) //Pressupoe que e mandado pelo menos 1 byte de data
 		return FALSE;
 	printf("Valid length\n");
