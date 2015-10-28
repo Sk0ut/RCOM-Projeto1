@@ -83,8 +83,9 @@ int is_c_flag(const char c){
 		case SERIAL_C_UA:
 			return TRUE;
 		default:
-			return  (c|C_FLAG_R_VALUE)==SERIAL_C_RR_N1 ||
-					(c|C_FLAG_R_VALUE)==SERIAL_C_REJ_N1;
+			return (c|C_FLAG_R_VALUE)==SERIAL_C_RR_N1 ||
+				   (c|C_FLAG_R_VALUE)==SERIAL_C_REJ_N1 ||
+				   (c|C_FLAG_R_VALUE)==SERIAL_I_C_N1;
 	}
 }
 
