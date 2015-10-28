@@ -628,11 +628,16 @@ int llwrite(LinkLayer link_layer, char* buf, int length){
 
         	if(!is_valid_string(link_layer->buffer,ansLength))
         		continue;
+			printf("Valid string");
         	if(length != 3)
         		continue;
-        	if(rr_validator(link_layer->buffer, ansLength))
-        		break;
+			printf("U frame\n")
+        	if(rr_validator(link_layer->buffer, ansLength)) {
+        		printf("RR frame\n");
+				break;
+			}
         	if(rej_validator(link_layer->buffer, ansLength)){
+				printf("REJ frame\n");
         		if(link_layer->sequence_number == 0 && link_layer->buffer[C_FLAG_INDEX] == SERIAL_C_REJ_N0){
         			resend = TRUE;
         			break;
