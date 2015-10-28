@@ -121,12 +121,12 @@ int app_transmitter(int argc, char **argv) {
 			segment[1] = sequenceNumber;
 			segment[2] = (length & 0xFF00) >> 8;
 			segment[3] = length & 0xFF;
-			/*
+			
 			if(llwrite(link_layer,segment, length+4) != length + 4){
 				printf("Error in sending data package");
 				return 1;
 			}
-			*/
+			
 			int j;
 			for (j = 0; j < length + 4; ++j)
 				printf("0x%.2x ", segment[j]);
@@ -145,12 +145,12 @@ int app_transmitter(int argc, char **argv) {
 	*((uint32_t *)&segment[5+file_name_size]) = file_info.size;
 
 
-	/*
+	
 	if (llwrite(link_layer, segment, file_name_size + 9) != file_name_size + 9) {
 		printf("Error starting end control packages\n");
 		return 1;
 	}
-	*/
+	
 	
 	if (llclose(link_layer) != 0)
 		return 1;
@@ -192,8 +192,6 @@ int app_receiver(int argc, char **argv) {
 	// Read start
 	unsigned int maxSegmentLength = get_max_message_size(link_layer);
 	char segment[maxSegmentLength];
-
-	printf("llread\n");
 	int segmentLength = llread(link_layer, segment);
 	
 	if (segmentLength <= 0) {
@@ -229,8 +227,24 @@ int app_receiver(int argc, char **argv) {
 	}
 
 	// Create file
-	// Read data
-	// Find end
+	while (1) {
+		segmentLength = llread(link_layer, segment);
+	
+		if (segmentLength <= 0) {
+			printf("Error llread");
+			return 1;
+		}		
+		printf("Read:");
+		for (i = 0; i < segmentLength; ++i)
+			printf(" 0x%.2x", segment[i]);
+		printf("\n");
+	
+		//check end conditions
+		if (segment[0] == PACKAGE_END)
+			break;
+		
+		// copy to file
+	}
 
 	
 	if (llclose(link_layer) != 0)
