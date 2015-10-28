@@ -308,66 +308,69 @@ int app_receiver(int argc, char **argv) {
 	int arg;
 	int changeMask[] = {FALSE, FALSE, FALSE, FALSE};
 	for(arg = 4; arg < argc; ++arg){
-		if(strcmp(argv[arg],"-b") == 0)
-				if(changeMask[0] == FALSE){
-					changeMask[0] = TRUE;
-					if(sscanf(argv[++arg], "%d", &baudrate) != 1){
-						printf("Error while parsing flag\n");
-						return 1;
-					}
-					baudrate = parse_baudrate(baudrate);
-					if(baudrate == -1){
-						printf("Invalid baudrate value.\n");
-						printf("Valid baudrate values: 0, 50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, "
-								"9600, 19200, 38400, 57600, 115200, 230400\n");
-						return 1;
-					}
-					
-				}
-				else {
-					printf("Baudrate defined more than once. First defined as value: %d\n", baudrate);
+		if(strcmp(argv[arg],"-b") == 0){
+			if(changeMask[0] == FALSE){
+				changeMask[0] = TRUE;
+				if(sscanf(argv[++arg], "%d", &baudrate) != 1){
+					printf("Error while parsing flag\n");
 					return 1;
 				}
-		else if(strcmp(argv[arg],"-t") == 0)		
-				if(changeMask[1] == FALSE){
-					changeMask[1] = TRUE;
-					if(sscanf(argv[++arg], "%d", &timeout) != 1){
-						printf("Error while parsing flag\n");
-						return 1;
-					}
-					
-				}
-				else {
-					printf("Timeout defined more than once. First defined as value: %d\n", timeout);
+				baudrate = parse_baudrate(baudrate);
+				if(baudrate == -1){
+					printf("Invalid baudrate value.\n");
+					printf("Valid baudrate values: 0, 50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, "
+							"9600, 19200, 38400, 57600, 115200, 230400\n");
 					return 1;
 				}
-		else if(strcmp(argv[arg],"-m") == 0)
-				if(changeMask[2] == FALSE){
-					changeMask[2] = TRUE;
-					if(sscanf(argv[++arg], "%d", &max_tries) != 1){
-						printf("Error while parsing flag\n");
-						return 1;
-					}
-					
-				}
-				else {
-					printf("Maximum retransmission tries cap defined more than once. First defined as value %d\n", max_tries);
+				
+			}
+			else {
+				printf("Baudrate defined more than once. First defined as value: %d\n", baudrate);
+				return 1;
+			}
+		}
+		else if(strcmp(argv[arg],"-t") == 0){		
+			if(changeMask[1] == FALSE){
+				changeMask[1] = TRUE;
+				if(sscanf(argv[++arg], "%d", &timeout) != 1){
+					printf("Error while parsing flag\n");
 					return 1;
 				}
-		else if(strcmp(argv[arg],"-i") == 0)
-				if(changeMask[3] == FALSE){
-					changeMask[3] = TRUE;
-					if(sscanf(argv[++arg], "%d", &max_frame_size) != 1){
-						printf("Error while parsing flag\n");
-						return 1;
-					}
-					
-				}
-				else {
-					printf("Maximum I frame size defined more than once. First defined as value %d\n", max_frame_size);
+				
+			}
+			else {
+				printf("Timeout defined more than once. First defined as value: %d\n", timeout);
+				return 1;
+			}
+		}
+		else if(strcmp(argv[arg],"-m") == 0){
+			if(changeMask[2] == FALSE){
+				changeMask[2] = TRUE;
+				if(sscanf(argv[++arg], "%d", &max_tries) != 1){
+					printf("Error while parsing flag\n");
 					return 1;
 				}
-		
+				
+			}
+			else {
+				printf("Maximum retransmission tries cap defined more than once. First defined as value %d\n", max_tries);
+				return 1;
+			}
+		}
+		else if(strcmp(argv[arg],"-i") == 0){
+			if(changeMask[3] == FALSE){
+				changeMask[3] = TRUE;
+				if(sscanf(argv[++arg], "%d", &max_frame_size) != 1){
+					printf("Error while parsing flag\n");
+					return 1;
+				}
+				
+			}
+			else {
+				printf("Maximum I frame size defined more than once. First defined as value %d\n", max_frame_size);
+				return 1;
+			}
+		}
 		else {
 			printf("Unrecognized flag %s\n", argv[arg]);
 			return 1;
