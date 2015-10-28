@@ -89,12 +89,12 @@ int app_transmitter(int argc, char **argv) {
 	printf("file name size: %d\n", file_name_size);
 	segment[2] = file_name_size;
 	memcpy(&(segment[3]), file_info.name, file_name_size);
+	printf("File name: %s\n", &(segment[3]));
 	segment[3+file_name_size] = PACKAGE_T_SIZE;
 	segment[4+file_name_size] = 4;
 	*((int *)segment[5+file_name_size]) = file_info.size;
-
+	
 	int i;
-
 	printf("Control package: ");
 	for(i= 0; i < file_name_size+9;i++){
 		printf("0x%x ",segment[i]);
