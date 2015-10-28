@@ -99,7 +99,6 @@ int is_valid_combination(const char a, const char c){
 }
 
 /* Validates I String Header */
-// TODO: Repensar a lógica disto
 int is_valid_i(const char* string, int string_length){
 	if(string_length < 5) //Pressupoe que e mandado pelo menos 1 byte de data
 		return FALSE;
@@ -127,6 +126,16 @@ int i_valid_bcc2(LinkLayer link_layer, char* buffer, int string_length){
 		bcc2 ^= buffer[i];
 
 	return bcc2 == buffer[string_length-1];
+}
+
+int is_expected_i(LinkLayer link_layer, char* buffer){
+	if((buffer[C_FLAG_INDEX] == SERIAL_I_C_N0) && (link_layer->sequence_number == 0))
+		return TRUE;
+
+	if((buffer[C_FLAG_INDEX] == SERIAL_I_C_N1) && (link_layer->sequence_number == 1))
+		return TRUE;
+
+	return FALSE;
 }
 
 int ua_validator(int flag, char* buffer, int length){
@@ -525,29 +534,47 @@ int llclose_receiver(LinkLayer link_layer) {
 
 int llread(LinkLayer link_layer, char *buf){
 	int length;
+	unsigned char ans[3];
 
     while (1) {
         length = read_frame(link_layer);
         if (length <= 0)
             continue;        
         printf("Validating string\n");
-        if(is_valid_string(link_layer->buffer,length))
-        	if(i_valid_bcc2(link_layer, link_layer->buffer,length))
-           		break;
+        if(!is_valid_string(link_layer->buffer,length))
+        	continue;
+
+		if(length == 3) {
+			if(set_validator(link_layer->flag, link_layer->buffer, length)){
+				ans[0] = SERIAL_A_ANS_RECEIVER;
+				ans[1] = SERIAL_C_UA;
+				ans[2] = ans[0] ^ ans[1];
+			}
+			continue;
+		}
+
+	    if(i_valid_bcc2(link_layer, link_layer->buffer,length) && is_expected_i(link_layer, link_layer->buffer))
+	    	break;
+
+    	ans[0] = SERIAL_A_ANS_RECEIVER;
+
+    	if(is_expected_i(link_layer, link_layer->buffer))
+    		ans[1] = link_layer->sequence_number == 0 ? SERIAL_C_REJ_N0 : SERIAL_C_REJ_N1;
+    	else
+    		ans[1] = link_layer->sequence_number == 0 ? SERIAL_C_RR_N0 : SERIAL_C_RR_N1;
+    	
+    	ans[2] = ans[0] ^ ans[1];
+
+    	write_frame(link_layer, ans, 3);
    	}
+
 	memcpy(buf, &(link_layer->buffer[3]), length-4);
 	
-	// TODO: Considerar hipótese de REJ
+   	ans[0] = SERIAL_A_ANS_RECEIVER;
+   	ans[1] = link_layer->sequence_number == 0 ? SERIAL_C_RR_N1 : SERIAL_C_RR_N0;
+	ans[2] = ans[0] ^ ans[1];
 
-   	char rr[3];
-   	rr[0] = SERIAL_A_ANS_RECEIVER;
-   	if(link_layer->sequence_number == 0)
-   		rr[1] = SERIAL_C_RR_N1;
-   	else
-		rr[1] = SERIAL_C_RR_N0;
-	rr[2] = rr[0] ^ rr[1];
-
-	write_frame(link_layer,rr,3);
+	write_frame(link_layer,ans,3);
 
 	link_layer->sequence_number = 1 - link_layer->sequence_number;
 
