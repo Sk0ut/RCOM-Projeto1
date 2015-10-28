@@ -406,7 +406,8 @@ int app_receiver(int argc, char **argv) {
 	char startSegment[maxSegmentLength];
 	char segment[maxSegmentLength];
 	int segmentLength = llread(link_layer, startSegment);
-	
+	int startSegmentLength = segmentLength;
+
 	if (segmentLength <= 0) {
 		printf("Error llread\n");
 		return 1;
@@ -473,7 +474,7 @@ int app_receiver(int argc, char **argv) {
 				printf("Wrong size for segment\n");
 				return 1;
 			}
-			if (segmentLength[1] != sequenceNumber) {
+			if (segment[1] != sequenceNumber) {
 				printf("Package out of order\n");
 				return 1;
 			}
