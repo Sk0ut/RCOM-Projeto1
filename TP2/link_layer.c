@@ -547,7 +547,8 @@ int llread(LinkLayer link_layer, char *buf){
         printf("Validating string\n");
         if(!is_valid_string(link_layer->buffer,length))
         	continue;
-
+		printf("Valid Header\n");
+		
 		if(length == 3) {
 			if(set_validator(link_layer->flag, link_layer->buffer, length)){
 				ans[0] = SERIAL_A_ANS_RECEIVER;
@@ -557,7 +558,8 @@ int llread(LinkLayer link_layer, char *buf){
 			}
 			continue;
 		}
-
+		
+		printf("I frame\n");
 	    if(i_valid_bcc2(link_layer, link_layer->buffer,length) && is_expected_i(link_layer, link_layer->buffer))
 	    	break;
 
