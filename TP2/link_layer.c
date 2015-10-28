@@ -76,6 +76,7 @@ int is_a_flag(const char a){
 /* Validates c flag */
 int is_c_flag(const char c){
 	printf("c flag: 0x%.2x", c);
+	printf("c flag|C_FLAG_R_VALUE: 0x%.2x", c | C_FLAG_R_VALUE);
 	switch(c){
 		case SERIAL_C_SET:
 		case SERIAL_C_DISC:
