@@ -624,7 +624,7 @@ int llwrite(LinkLayer link_layer, char* buf, int length){
         		resend = TRUE;
         		break;
         	}
-        	printf("Validating string\n");
+        	printf("Validating string(size: %d)\n", ansLength);
 
         	if(!is_valid_string(link_layer->buffer,ansLength))
         		continue;
