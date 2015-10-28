@@ -1,4 +1,5 @@
 #include "linklayer.h"
+#include "utils.h"
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -41,7 +42,7 @@ int get_file_info(File_info_t* file_info, char* filePath){
 	return 0;
 }
 
-void printUsage(int flag, char* argv0){
+void print_usage(int flag, char* argv0){
 	if(flag == TRANSMITTER)
 		printf("Usage: %s TRANSMITTER /dev/ttyS<portNo> <filepath> <flags>\n", argv0);
 	else
@@ -52,17 +53,60 @@ void printUsage(int flag, char* argv0){
 	printf("       -i [MAX_I_FRAME_SIZE] - Sets the maximum I frame size (before stuffing) (default: 255).\n");
 }
 
+int parse_baudrate(int baudrate){
+	switch(baudrate){
+		case 0:
+			return B0;
+		case 50:
+			return B50;
+		case 75:
+			return B75;
+		case 110:
+			return B110;
+		case 134:
+			return B134;
+		case 150:
+			return B150;
+		case 200:
+			return B200;
+		case 300:
+			return B300;
+		case 600:
+			return B600;
+		case 1200:
+			return B1200;
+		case 2400:
+			return B2400;
+		case 4800:
+			return B4800;
+		case 9600:
+			return B9600;
+		case 19200:
+			return B19200;
+		case 38400:
+			return B38400;
+		case 57600:
+			return B57600;
+		case 115200:
+			return B115200;
+		case 230400
+			return B230400;
+		default:
+			return -1;
+	}
+}
+
 int app_transmitter(int argc, char **argv) {
 
 	int flag = TRANSMITTER;
 
 	if(argc < 4){
-		printUsage(flag, argv[0]);
+		print_usage(flag, argv[0]);
 		return 1;
 	}
 
 	File_info_t file_info;
-	int port;
+	int port = -1;
 	int baudrate = BAUDRATE;
 	int max_tries = 3;
 	int timeout = 3;
@@ -72,51 +116,72 @@ int app_transmitter(int argc, char **argv) {
 	int arg;
 	int changeMask[] = {FALSE, FALSE, FALSE, FALSE};
 	for(arg = 4; arg < argc; ++arg){
-		switch(argv[i]){
-			case "-b":
+		if(strcmp(argv[arg],"-b") == 0)
 				if(changeMask[0] == FALSE){
-					changeMask[0] == TRUE;
-					sscanf(argv[++arg], "%d", &baudrate);
-					break;
+					changeMask[0] = TRUE;
+					if(sscanf(argv[++arg], "%d", &baudrate) != 1){
+						printf("Error while parsing flag\n");
+						return 1;
+					}
+					baudrate = parse_baudrate(baudrate);
+					if(baudrate == -1){
+						printf("Invalid baudrate value.\n");
+						printf("Valid baudrate values: 0, 50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, "
+								"9600, 19200, 38400, 57600, 115200, 230400\n");
+						return 1;
+					}
 				}
 				else {
 					printf("Baudrate defined more than once. First defined as value: %d\n", baudrate);
 					return 1;
 				}
-			case "-t":			
+		else if(strcmp(argv[arg],"-t") == 0)		
 				if(changeMask[1] == FALSE){
-					changeMask[1] == TRUE;
-					sscanf(argv[++arg], "%d", &timeout);
-					break;
+					changeMask[1] = TRUE;
+					if(sscanf(argv[++arg], "%d", &timeout) != 1){
+						printf("Error while parsing flag\n");
+						return 1;
+					}				
 				}
 				else {
 					printf("Timeout defined more than once. First defined as value: %d\n", timeout);
 					return 1;
 				}
-			case "-m":
+		else if(strcmp(argv[arg],"-m") == 0)
 				if(changeMask[2] == FALSE){
-					changeMask[2] == TRUE;
-					sscanf(argv[++arg], "%d", &max_tries);
-					break;
+					changeMask[2] = TRUE;
+					if(sscanf(argv[++arg], "%d", &max_tries) != 1){
+						printf("Error while parsing flag\n");
+						return 1;
+					}			
 				}
 				else {
 					printf("Maximum retransmission tries cap defined more than once. First defined as value %d\n", max_tries);
 					return 1;
 				}
-			case "-i":
+		else if(strcmp(argv[arg],"-i") == 0)
 				if(changeMask[3] == FALSE){
-					changeMask[3] == TRUE;
-					sscanf(argv[++arg], "%d", &max_frame_size);
-					break;
+					changeMask[3] = TRUE;
+					if(sscanf(argv[++arg], "%d", &max_frame_size) != 1){
+						printf("Error while parsing flag\n");
+						return 1;
+					}					
 				}
 				else {
 					printf("Maximum I frame size defined more than once. First defined as value %d\n", max_frame_size);
 					return 1;
 				}
-			default:
-
+		
+		else {
+			printf("Unrecognized flag %s", argv[arg]);
+			return 1;
 		}
 
+	}
+
+	if(port == -1){
+		printf("Unrecognized port: %s", argv[2]);
+		return 1;
 	}
 
 	LinkLayer link_layer = llinit(port, flag, baudrate, max_tries, timeout, max_frame_size);
@@ -129,8 +194,11 @@ int app_transmitter(int argc, char **argv) {
 	printf("filepath: %s\n", filePath);
 	
 	
-	if(get_file_info(&file_info, filePath) == -1)
+	if(get_file_info(&file_info, filePath) == -1){
+		printf("Can't open file: %s", filePath);
 		return 1;
+	}
+
 	printf("Fd: %d, Name: %s, Size:%d\n", file_info.fd, file_info.name, file_info.size);
 
 	if (llopen(link_layer) != 0)
@@ -223,11 +291,11 @@ int app_receiver(int argc, char **argv) {
 	int flag = RECEIVER;
 
 	if (argc < 3) {
-		printUsage(flag, argv[0]);
+		print_usage(flag, argv[0]);
 		return 1;
 	}
 
-	int port;
+	int port = -1;
 	int baudrate = BAUDRATE;
 	int max_tries = 3;
 	int timeout = 3;
@@ -236,51 +304,75 @@ int app_receiver(int argc, char **argv) {
 	int arg;
 	int changeMask[] = {FALSE, FALSE, FALSE, FALSE};
 	for(arg = 4; arg < argc; ++arg){
-		switch(argv[i]){
-			case "-b":
+		if(strcmp(argv[arg],"-b") == 0)
 				if(changeMask[0] == FALSE){
-					changeMask[0] == TRUE;
-					sscanf(argv[++arg], "%d", &baudrate);
-					break;
+					changeMask[0] = TRUE;
+					if(sscanf(argv[++arg], "%d", &baudrate) != 1){
+						printf("Error while parsing flag\n");
+						return 1;
+					}
+					baudrate = parse_baudrate(baudrate);
+					if(baudrate == -1){
+						printf("Invalid baudrate value.\n");
+						printf("Valid baudrate values: 0, 50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, "
+								"9600, 19200, 38400, 57600, 115200, 230400\n");
+						return 1;
+					}
+					
 				}
 				else {
 					printf("Baudrate defined more than once. First defined as value: %d\n", baudrate);
 					return 1;
 				}
-			case "-t":			
+		else if(strcmp(argv[arg],"-t") == 0)		
 				if(changeMask[1] == FALSE){
-					changeMask[1] == TRUE;
-					sscanf(argv[++arg], "%d", &timeout);
-					break;
+					changeMask[1] = TRUE;
+					if(sscanf(argv[++arg], "%d", &timeout) != 1){
+						printf("Error while parsing flag\n");
+						return 1;
+					}
+					
 				}
 				else {
 					printf("Timeout defined more than once. First defined as value: %d\n", timeout);
 					return 1;
 				}
-			case "-m":
+		else if(strcmp(argv[arg],"-m") == 0)
 				if(changeMask[2] == FALSE){
-					changeMask[2] == TRUE;
-					sscanf(argv[++arg], "%d", &max_tries);
-					break;
+					changeMask[2] = TRUE;
+					if(sscanf(argv[++arg], "%d", &max_tries) != 1){
+						printf("Error while parsing flag\n");
+						return 1;
+					}
+					
 				}
 				else {
 					printf("Maximum retransmission tries cap defined more than once. First defined as value %d\n", max_tries);
 					return 1;
 				}
-			case "-i":
+		else if(strcmp(argv[arg],"-i") == 0)
 				if(changeMask[3] == FALSE){
-					changeMask[3] == TRUE;
-					sscanf(argv[++arg], "%d", &max_frame_size);
-					break;
+					changeMask[3] = TRUE;
+					if(sscanf(argv[++arg], "%d", &max_frame_size) != 1){
+						printf("Error while parsing flag\n");
+						return 1;
+					}
+					
 				}
 				else {
 					printf("Maximum I frame size defined more than once. First defined as value %d\n", max_frame_size);
 					return 1;
 				}
-			default:
-
+		
+		else {
+			printf("Unrecognized flag %s", argv[arg]);
+			return 1;
 		}
+	}
 
+	if(port == -1){
+		printf("Unrecognized port: %s", argv[2]);
+		return 1;
 	}
 
 	LinkLayer link_layer = llinit(port, flag, baudrate, max_tries, timeout, max_frame_size);
