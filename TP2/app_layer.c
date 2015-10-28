@@ -92,7 +92,8 @@ int app_transmitter(int argc, char **argv) {
 	printf("File name: %s\n", &(segment[3]));
 	segment[3+file_name_size] = PACKAGE_T_SIZE;
 	segment[4+file_name_size] = 4;
-	*((int *)segment[5+file_name_size]) = file_info.size;
+	*((int *)&segment[5+file_name_size]) = file_info.size;
+	printf("File size: %d\n", *((int *)&(segment[5+file_name_size])));
 	
 	int i;
 	printf("Control package: ");
