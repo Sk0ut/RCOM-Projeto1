@@ -420,9 +420,9 @@ int app_receiver(int argc, char **argv) {
 	
 	File_info_t file_info;
 	
-	if(segment[0] == PACKAGE_START){
+	if(startSegment[0] == PACKAGE_START){
 		i=1;
-		while(i < segmentLength){
+		while(i < startSegmentLength){
 			char type = startSegment[i];
 			unsigned char size = startSegment[i+1];
 			switch(type){
@@ -473,6 +473,11 @@ int app_receiver(int argc, char **argv) {
 				printf("Wrong size for segment\n");
 				return 1;
 			}
+			if (segmentLength[1] != sequenceNumber) {
+				printf("Package out of order\n");
+				return 1;
+			}
+
 			uint16_t package_data_size = segment[2] << 8 | segment[3];
 			if (package_data_size != segmentLength - 4) {
 				printf("Reported package size and received size differ\n");
@@ -481,6 +486,7 @@ int app_receiver(int argc, char **argv) {
 
 			write(file_info.fd, &(segment[4]), package_data_size);
 			reported_size += package_data_size;
+			++sequenceNumber;
 		}
 		else {
 			printf("Received unknown package type\n");
