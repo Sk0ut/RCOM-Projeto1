@@ -534,8 +534,14 @@ int llread(LinkLayer link_layer, char *buf){
 
     while (1) {
         length = read_frame(link_layer);
+		printf("read length: %d\n", length);
         if (length <= 0)
-            continue;        
+            continue;
+		printf("Read I String:");
+		int i;
+		for (i = 0; i < length; ++i)
+			printf(" 0x%.2x", link_layer->buffer[i]);
+		printf("\n");
         printf("Validating string\n");
         if(!is_valid_string(link_layer->buffer,length))
         	continue;

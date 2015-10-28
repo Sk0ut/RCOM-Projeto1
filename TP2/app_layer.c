@@ -179,6 +179,7 @@ int app_receiver(int argc, char **argv) {
 	unsigned int maxSegmentLength = get_max_message_size(link_layer);
 	char segment[maxSegmentLength];
 
+	printf("llread\n");
 	int segmentLength = llread(link_layer, segment);
 
 	if (segmentLength <= 0) {
