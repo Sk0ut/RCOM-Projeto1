@@ -117,7 +117,7 @@ int app_transmitter(int argc, char **argv) {
 
 	int arg;
 	int changeMask[] = {FALSE, FALSE, FALSE, FALSE};
-	for(arg = 3; arg < argc; ++arg){
+	for(arg = 4; arg < argc; ++arg){
 		if((arg +1) == argc) {
 			printf("Error while parsing flag %s \n", argv[arg]);
 			return 1;
@@ -320,7 +320,7 @@ int app_receiver(int argc, char **argv) {
 			if(changeMask[0] == FALSE){
 				changeMask[0] = TRUE;
 				if(sscanf(argv[++arg], "%d", &baudrate) != 1){
-					printf("Error while parsing flag\n");
+					printf("Unrecognized value for flag -b\n");
 					return 1;
 				}
 				baudrate = parse_baudrate(baudrate);
@@ -341,7 +341,7 @@ int app_receiver(int argc, char **argv) {
 			if(changeMask[1] == FALSE){
 				changeMask[1] = TRUE;
 				if(sscanf(argv[++arg], "%d", &timeout) != 1){
-					printf("Error while parsing flag\n");
+					printf("Unrecognized value for flag -t\n");
 					return 1;
 				}
 				
@@ -355,7 +355,7 @@ int app_receiver(int argc, char **argv) {
 			if(changeMask[2] == FALSE){
 				changeMask[2] = TRUE;
 				if(sscanf(argv[++arg], "%d", &max_tries) != 1){
-					printf("Error while parsing flag\n");
+					printf("Unrecognized value for flag -m\n");
 					return 1;
 				}
 				
@@ -369,7 +369,7 @@ int app_receiver(int argc, char **argv) {
 			if(changeMask[3] == FALSE){
 				changeMask[3] = TRUE;
 				if(sscanf(argv[++arg], "%d", &max_frame_size) != 1){
-					printf("Error while parsing flag\n");
+					printf("Unrecognized value for flag -i\n");
 					return 1;
 				}
 				
