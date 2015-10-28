@@ -365,13 +365,13 @@ int app_receiver(int argc, char **argv) {
 				}
 		
 		else {
-			printf("Unrecognized flag %s", argv[arg]);
+			printf("Unrecognized flag %s\n", argv[arg]);
 			return 1;
 		}
 	}
 
 	if(port == -1){
-		printf("Unrecognized port: %s", argv[2]);
+		printf("Unrecognized port: %s\n", argv[2]);
 		return 1;
 	}
 
@@ -392,7 +392,7 @@ int app_receiver(int argc, char **argv) {
 	int segmentLength = llread(link_layer, segment);
 	
 	if (segmentLength <= 0) {
-		printf("Error llread");
+		printf("Error llread\n");
 		return 1;
 	}
 	
@@ -412,11 +412,11 @@ int app_receiver(int argc, char **argv) {
 			switch(type){
 				case PACKAGE_T_SIZE:
 					file_info.size = *((uint32_t *) &segment[i+2]);
-					printf("File info size: %d", file_info.size);
+					printf("File info size: %d\n", file_info.size);
 					break;
 				case PACKAGE_T_NAME:
 					memcpy(file_info.name,&segment[i+2],size);
-					printf("File info name: %s", file_info.name);
+					printf("File info name: %s\n", file_info.name);
 					break;
 			}
 			i += 2 + size;
@@ -429,7 +429,7 @@ int app_receiver(int argc, char **argv) {
 		segmentLength = llread(link_layer, segment);
 	
 		if (segmentLength <= 0) {
-			printf("Error llread");
+			printf("Error llread\n");
 			return 1;
 		}		
 		printf("Read:");
