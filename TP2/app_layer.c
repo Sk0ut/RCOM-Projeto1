@@ -101,6 +101,10 @@ int app_transmitter(int argc, char **argv) {
 	}
 	printf("\n");
 	//Send start
+	if (llwrite(link_layer, segment, file_name_size + 7) != file_name_size + 7) {
+		printf("Error llwrite\n");
+		return 1;
+	}
 	//Send data
 	int length;
 	unsigned char sequenceNumber = 0;
@@ -172,6 +176,22 @@ int app_receiver(int argc, char **argv) {
 		return 1;
 	
 	// Read start
+	unsigned int maxSegmentLength = get_max_message_size(link_layer);
+	char segment[maxSegmentLength];
+
+	int segmentLength = llread(link_layer, segment);
+
+	if (segmentLength <= 0) {
+		printf("Error llread");
+		return 1;
+	}
+
+	int i;
+	printf("Read:")
+	for (i = 0; i < segmentLength; ++i)
+		printf(" 0x%.2x", segment[i]);
+	printf("\n");
+
 	// Create file
 	// Read data
 	// Find end

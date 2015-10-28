@@ -177,16 +177,12 @@ int disc_validator (int flag, char* buffer, int length){
     		(buffer[C_FLAG_INDEX] == SERIAL_C_DISC);
 }
 
-int rr_validator (char* buffer, int length, int type){
-    switch(type){
-        case RR0:
-        	return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_RR_N0);
-        case RR1:
-        	return (length == 3) && (buffer[C_FLAG_INDEX] == SERIAL_C_RR_N1);
-        default:
-        	return -1;
-    }
+int rr_validator (char* buffer, int length){
+    return (length == 3) && ((buffer[C_FLAG_INDEX] == SERIAL_C_RR_N0) || (buffer[C_FLAG_INDEX] == SERIAL_C_RR_N1));
+}
 
+int rej_validator (char* buffer, int length){
+	return  (length == 3) && ((buffer[C_FLAG_INDEX] == SERIAL_C_REJ_N0) || (buffer[C_FLAG_INDEX] == SERIAL_C_REJ_N1));
 }
 
 void sig_alarm_handler(int sig) {
@@ -534,7 +530,7 @@ int llclose_receiver(LinkLayer link_layer) {
 
 int llread(LinkLayer link_layer, char *buf){
 	int length;
-	unsigned char ans[3];
+	char ans[3];
 
     while (1) {
         length = read_frame(link_layer);
@@ -583,59 +579,69 @@ int llread(LinkLayer link_layer, char *buf){
 
 int llwrite(LinkLayer link_layer, char* buf, int length){
 	int iLength = length+4;
-	char frame[length + 4];
+	char frame[iLength];
 
 	frame[0] = SERIAL_A_COM_TRANSMITTER;
-	if(iFlag == I0){
-		frame[1] = SERIAL_I_C_N0;
-		frame[2] = SERIAL_A_COM_TRANSMITTER ^ SERIAL_I_C_N0;
-	}
-	else{
-		frame[1] = SERIAL_I_C_N1;
-		frame[2] = SERIAL_A_COM_TRANSMITTER ^ SERIAL_I_C_N1;
-	}
-
-	frame[3] = buf[0];
+	frame[1] = iFlag == I0 ? SERIAL_I_C_N0 : SERIAL_I_C_N1;
+	frame[2] = frame[0] ^ frame[1];
 
 	int bufCounter;
-	char bcc2 = buf[0];
-
-	for(bufCounter = 1; bufCounter < length; bufCounter++){
+	char bcc2 = 0;
+	for(bufCounter = 0; bufCounter < length; bufCounter++){
 		frame[3+bufCounter] = buf[bufCounter];
 		bcc2^=buf[bufCounter];
 	}
-
 	frame[iLength-1] = bcc2;
-
-	int rrType, rrLength;
-    if(iFlag == I0)
-    	rrType = RR1;
-    else
-    	rrType = RR0;
 	
+	int ansLength;
+	int resend;
 	reset_alarm();
     while (tries < link_layer->max_tries) {
     	printf("Sending I string\n");
    		write_frame(link_layer,frame,iLength);
+   		resend = FALSE;
     	alarm(3);
     	while (1) {
-        	rrLength = read_frame(link_layer);
-        	if (rrLength <= 0)
-            	break;
-        	printf("Validating string\n");
-        	if(is_valid_string(link_layer->buffer,length) && rr_validator(link_layer->buffer, rrLength, rrType)) {
-            	printf("Valid string\n"); 
-            	alarm(0);
-            	break;
+        	ansLength = read_frame(link_layer);
+        	if (ansLength <= 0){
+        		resend = TRUE;
+        		break;
         	}
+        	printf("Validating string\n");
+
+        	if(!is_valid_string(link_layer->buffer,ansLength))
+        		continue;
+        	if(length != 3)
+        		continue;
+        	if(rr_validator(link_layer->buffer, ansLength))
+        		break;
+        	if(rej_validator(link_layer->buffer, ansLength)){
+        		if(link_layer->sequence_number == 0 && link_layer->buffer[C_FLAG_INDEX] == SERIAL_C_REJ_N0){
+        			resend = TRUE;
+        			break;
+        		}
+        		if(link_layer->sequence_number == 1 && link_layer->buffer[C_FLAG_INDEX] == SERIAL_C_REJ_N1){
+        			resend = TRUE;
+        			break;
+        		}
+        		continue;
+        	}
+
 		}
-   		if (rrLength != -1)
-    		break;
+		if (resend)
+			continue; 
+
+		if(link_layer->sequence_number == 0 && link_layer->buffer[C_FLAG_INDEX] == SERIAL_C_RR_N1)
+        	break;
+        if(link_layer->sequence_number == 1 && link_layer->buffer[C_FLAG_INDEX] == SERIAL_C_RR_N0)
+        	break;
    	}
+   	alarm(0);
 
    	if (tries == link_layer->max_tries)    
        	return -1;
 
+    link_layer->sequence_number = 1 - link_layer->sequence_number;
     return length;
 }
 
