@@ -237,6 +237,7 @@ int app_transmitter(int argc, char **argv) {
 
 	//Send data
 	int length;
+	int sentBytes = 0;
 	unsigned char sequenceNumber = 0;
 	do {
 		length = read(file_info.fd, &(segment[4]), segmentSize);
@@ -251,7 +252,8 @@ int app_transmitter(int argc, char **argv) {
 				printf("Error: Failed to send data package\n");
 				return 1;
 			}
-			
+			sentBytes += length;
+			printf("Sending data... %.2f%% done\n", sentBytes * 100.0 / file_info.size);
 			++sequenceNumber;
 		}
 	} while (length > 0);
@@ -466,6 +468,7 @@ int app_receiver(int argc, char **argv) {
 
 			write(file_info.fd, &(segment[4]), package_data_size);
 			reported_size += package_data_size;
+			printf("Receiving data... %.2f%% done\n", reported_size * 100.0 / file_info.size);
 			++sequenceNumber;
 		}
 		else {
