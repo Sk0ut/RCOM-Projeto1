@@ -119,26 +119,26 @@ int app_transmitter(int argc, char **argv) {
 	int changeMask[] = {FALSE, FALSE, FALSE, FALSE};
 	for(arg = 4; arg < argc; ++arg){
 		if((arg +1) == argc) {
-			printf("Error while parsing flag %s \n", argv[arg]);
+			printf("Error: Failed to parse flag %s \n", argv[arg]);
 			return 1;
 		}
 		if(strcmp(argv[arg],"-b") == 0)
 				if(changeMask[0] == FALSE){
 					changeMask[0] = TRUE;
 					if(sscanf(argv[++arg], "%d", &baudrate) != 1){
-						printf("Error while parsing baudrate value \n");
+						printf("Error: Unable to parse baudrate value \n");
 						return 1;
 					}
 					baudrate = parse_baudrate(baudrate);
 					if(baudrate == -1){
-						printf("Invalid baudrate value.\n");
+						printf("Error: Invalid baudrate value.\n");
 						printf("Valid baudrate values: 0, 50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, "
 								"9600, 19200, 38400, 57600, 115200, 230400\n");
 						return 1;
 					}
 				}
 				else {
-					printf("Baudrate defined more than once. First defined as value: %d\n", baudrate);
+					printf("Error: Baudrate defined more than once. First defined as value: %d\n", baudrate);
 					return 1;
 				}
 		else if(strcmp(argv[arg],"-t") == 0)		
@@ -150,7 +150,7 @@ int app_transmitter(int argc, char **argv) {
 					}				
 				}
 				else {
-					printf("Timeout defined more than once. First defined as value: %d\n", timeout);
+					printf("Error: Timeout defined more than once. First defined as value: %d\n", timeout);
 					return 1;
 				}
 		else if(strcmp(argv[arg],"-m") == 0)
@@ -162,7 +162,7 @@ int app_transmitter(int argc, char **argv) {
 					}			
 				}
 				else {
-					printf("Maximum retransmission tries cap defined more than once. First defined as value %d\n", max_tries);
+					printf("Error: Maximum retransmission tries cap defined more than once. First defined as value %d\n", max_tries);
 					return 1;
 				}
 		else if(strcmp(argv[arg],"-i") == 0)
@@ -174,37 +174,43 @@ int app_transmitter(int argc, char **argv) {
 					}					
 				}
 				else {
-					printf("Maximum I frame size defined more than once. First defined as value %d\n", max_frame_size);
+					printf("Error: Maximum I frame size defined more than once. First defined as value %d\n", max_frame_size);
 					return 1;
 				}
 		
 		else {
-			printf("Unrecognized flag %s", argv[arg]);
+			printf("Error: Unrecognized flag %s", argv[arg]);
 			return 1;
 		}
 
 	}
 
 	if(port == -1){
-		printf("Unrecognized port: %s", argv[2]);
+		printf("Error: Unrecognized port: %s", argv[2]);
 		return 1;
 	}
 
 	LinkLayer link_layer = llinit(port, flag, baudrate, max_tries, timeout, max_frame_size);
 	
-	
+	if(link_layer == NULL){
+		return 1;
+	}	
+
 	if(get_file_info(&file_info, filePath) == -1){
-		printf("Can't open file: %s", filePath);
+		printf("Error: Can't open file: %s", filePath);
 		return 1;
 	}
 
-	if (llopen(link_layer) != 0)
-		return 1;
+	printf("Connecting to receiver... \n");	
 	
-	unsigned int segmentSize = get_max_message_size(link_layer) - 4;
-	printf("Segment size: %d\n",segmentSize);
+	if (llopen(link_layer) != 0){
+		printf("Error: Unable to connect to receiver\n");
+		return 1;
+	}
+	printf("Connected to receiver\n");
 
-	unsigned char segment[segmentSize];
+	unsigned int segmentSize = get_max_message_size(link_layer) - 4;
+	uint8_t segment[segmentSize];
 
 	// Build Control package
 	segment[0] = PACKAGE_START;
@@ -215,16 +221,17 @@ int app_transmitter(int argc, char **argv) {
 	segment[3+file_name_size] = PACKAGE_T_SIZE;
 	segment[4+file_name_size] = sizeof(uint32_t);
 	*((uint32_t *)&segment[5+file_name_size]) = file_info.size;
-	
-	int i;
-	for(i= 0; i < file_name_size+9;i++){
-		printf("0x%x ",segment[i]);
-	}
-	printf("\n");
 
+	if((9+file_name_size) > segmentSize){
+		printf("Error: Maximum frame size too small\n");
+		return 1;
+	}
+
+	printf("Sending data...\n");
+	
 	//Send start
 	if (llwrite(link_layer, segment, file_name_size + 9) != file_name_size + 9) {
-		printf("Error sending start control package\n");
+		printf("Error: Failed to send start control package\n");
 		return 1;
 	}
 
@@ -241,7 +248,7 @@ int app_transmitter(int argc, char **argv) {
 			segment[3] = length & 0xFF;
 			
 			if(llwrite(link_layer,segment, length+4) != length + 4){
-				printf("Error in sending data package");
+				printf("Error: Failed to send data package");
 				return 1;
 			}
 			
@@ -262,18 +269,27 @@ int app_transmitter(int argc, char **argv) {
 	segment[4+file_name_size] = sizeof(uint32_t);
 	*((uint32_t *)&segment[5+file_name_size]) = file_info.size;
 
-
-	
 	if (llwrite(link_layer, segment, file_name_size + 9) != file_name_size + 9) {
-		printf("Error starting end control packages\n");
+		printf("Error: Failed to send end control package\n");
+		return 1;
+	}
+
+	printf("Data sent\nClosing connection...\n");
+	
+
+	if (llclose(link_layer) != 0){
+		printf("Error: Unable to close connection\n");
 		return 1;
 	}
 	
-	
-	if (llclose(link_layer) != 0)
-		return 1;
-	
 	lldelete(link_layer);
+
+	printf("Connection closed\n");
+
+	if (close(file_info.fd) != 0){
+		printf("Error: Unable to close transmitted file\n");
+		return 1;	
+	}
 
 	return 0;
 }
@@ -311,7 +327,7 @@ int app_receiver(int argc, char **argv) {
 				}
 				baudrate = parse_baudrate(baudrate);
 				if(baudrate == -1){
-					printf("Invalid baudrate value.\n");
+					printf("Error: Invalid baudrate value.\n");
 					printf("Valid baudrate values: 0, 50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, "
 							"9600, 19200, 38400, 57600, 115200, 230400\n");
 					return 1;
@@ -377,10 +393,19 @@ int app_receiver(int argc, char **argv) {
 	}
 
 	LinkLayer link_layer = llinit(port, flag, baudrate, max_tries, timeout, max_frame_size);
-	
-	if (llopen(link_layer) != 0)
+
+	if(link_layer == NULL){
 		return 1;
+	}	
+
+	printf("Connecting to transmitter... \n");	
 	
+	if (llopen(link_layer) != 0){
+		printf("Error: Unable to connect to transmitter\n");
+		return 1;
+	}	
+
+	printf("Receiving data... \n");	
 	// Read start
 	unsigned int maxSegmentLength = get_max_message_size(link_layer);
 	uint8_t startSegment[maxSegmentLength];
@@ -429,11 +454,6 @@ int app_receiver(int argc, char **argv) {
 			printf("Error: Failed to read data package.\n");
 			return 1;
 		}		
-		printf("Read:");
-		for (i = 0; i < segmentLength; ++i)
-			printf(" 0x%.2x", segment[i]);
-		printf("\n");
-	
 		//check end conditions
 		if (segment[0] == PACKAGE_END)
 			break;
@@ -477,13 +497,21 @@ int app_receiver(int argc, char **argv) {
 		printf("Error: Reported size (%d bytes) differs from expected size (%d bytes)\n", reported_size, file_info.size);
 	}
 
-	if (close(file_info.fd) != 0)
-		return 1;
+	printf("Data received\nClosing connection...\n");
 	
-	if (llclose(link_layer) != 0)
+	if (llclose(link_layer) != 0){
+		printf("Error: Unable to close the connection\n");
 		return 1;
+	}
 	
 	lldelete(link_layer);
+
+	printf("Connection closed\n");
+
+	if (close(file_info.fd) != 0){
+		printf("Error: Unable to close received file\n");	
+		return 1;
+	}
 	
 	return 0;
 }

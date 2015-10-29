@@ -342,8 +342,12 @@ LinkLayer llinit(int port, int flag, unsigned int baudrate, unsigned int max_tri
     	return NULL;
 	}
 
-	LinkLayer link_layer = malloc(sizeof(struct LinkLayer_t));
+	if(max_frame_size <= 6){
+		printf("Error: Maximum frame size too small\n");
+		return NULL;
+	}
 
+	LinkLayer link_layer = malloc(sizeof(struct LinkLayer_t));
 	if(link_layer == NULL)
 		return NULL;
 	
@@ -636,6 +640,6 @@ void lldelete(LinkLayer link_layer) {
 	}
 }
 
-unsigned int get_max_message_size(LinkLayer link_layer) {
+int get_max_message_size(LinkLayer link_layer) {
 	return link_layer->max_frame_size - 6;
 }
