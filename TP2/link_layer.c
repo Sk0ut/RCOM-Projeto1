@@ -539,7 +539,9 @@ int llread(LinkLayer link_layer, char *buf){
 	int length;
 	char ans[3];
 
-    while (1) {
+	reset_alarm();
+	alarm(link_layer->max_tries * link_layer->timeout);
+    while (tries == 0) {
         length = read_frame(link_layer);
         if (length <= 0)
             continue;
@@ -569,6 +571,10 @@ int llread(LinkLayer link_layer, char *buf){
 
     	write_frame(link_layer, ans, 3);
    	}
+	alarm(0);
+	if (length <= 0)
+		return -1;
+
 	memcpy(buf, &(link_layer->buffer[3]), length-4);
 	
    	ans[0] = SERIAL_A_ANS_RECEIVER;

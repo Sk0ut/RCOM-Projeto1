@@ -248,7 +248,7 @@ int app_transmitter(int argc, char **argv) {
 			segment[3] = length & 0xFF;
 			
 			if(llwrite(link_layer,segment, length+4) != length + 4){
-				printf("Error: Failed to send data package");
+				printf("Error: Failed to send data package\n");
 				return 1;
 			}
 			
