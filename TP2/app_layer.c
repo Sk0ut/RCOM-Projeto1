@@ -278,9 +278,9 @@ int app_transmitter(int argc, char **argv) {
 		return 1;
 	}
 	
+	printf("Connection closed\n\n");
+	lllog(link_layer);
 	lldelete(link_layer);
-
-	printf("Connection closed\n");
 
 	if (close(file_info.fd) != 0){
 		printf("Error: Unable to close transmitted file\n");
@@ -485,10 +485,11 @@ int app_receiver(int argc, char **argv) {
 		printf("Error: Unable to close the connection\n");
 		return 1;
 	}
-	
-	lldelete(link_layer);
 
-	printf("Connection closed\n");
+	printf("Connection closed\n\n");
+
+	lllog(link_layer);
+	lldelete(link_layer);
 
 	if (close(file_info.fd) != 0){
 		printf("Error: Unable to close received file\n");	

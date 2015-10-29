@@ -12,6 +12,7 @@
 #include <time.h>
 
 static int tries;
+static int timeoutNo;
 
 int is_valid_s_u(const char* string);
 int is_a_flag(const char a);
@@ -37,6 +38,8 @@ struct LinkLayer_t {
 	struct termios oldtio;
 	unsigned int sequence_number;
 	char* buffer;
+	int rejNo;
+	int iNo;
 };
 
 int generate_error(){
@@ -193,6 +196,7 @@ int rej_validator (char* buffer, int length){
 void sig_alarm_handler(int sig) {
     if (sig == SIGALRM) {
         ++tries;
+		++timeoutNo;
     }
 }
 
@@ -367,11 +371,15 @@ LinkLayer llinit(int port, int flag, unsigned int baudrate, unsigned int max_tri
 	link_layer->sequence_number = 0;
 	link_layer->buffer = malloc((max_frame_size-2)*sizeof(char));
 	link_layer->oldtio = oldtio;
+	link_layer->rejNo = 0;
+	link_layer->iNo = 0;
 
 	if(link_layer->buffer == NULL){
 		free(link_layer);
 		return NULL;
 	}
+
+	timeoutNo = 0;
 	
 	return link_layer;
 }
@@ -493,6 +501,12 @@ int llclose_transmitter(LinkLayer link_layer){
     return 0;
 }
 
+void lllog(LinkLayer link_layer){
+	printf("Number of timeouts occured: %d\n",timeoutNo);
+	printf("Number of REJ frames %s: %d\n", link_layer->flag == TRANSMITTER ? "received", "transmitted", link_layer->rejNo);
+	printf("Number of I frames %s: %d\n", link_layer->flag == RECEIVER ? "received", "transmitted", link_layer->iNo);
+}
+
 int llclose_receiver(LinkLayer link_layer) {
     char disc[] = {SERIAL_A_COM_RECEIVER, SERIAL_C_DISC, SERIAL_A_COM_RECEIVER^SERIAL_C_DISC};
     int length;
@@ -558,18 +572,23 @@ int llread(LinkLayer link_layer, char *buf){
 			}
 			continue;
 		}
-		
-	    if(i_valid_bcc2(link_layer, link_layer->buffer,length) && is_expected_i(link_layer, link_layer->buffer) && !generate_error())
-	    	break;
+
+		++link_layer->iNo;		
+
+	    if(i_valid_bcc2(link_layer, link_layer->buffer,length) && is_expected_i(link_layer, link_layer->buffer) && !generate_error())    
+			break;
 
 		ans[0] = SERIAL_A_ANS_RECEIVER;
-    	if(is_expected_i(link_layer, link_layer->buffer))
+    	if(is_expected_i(link_layer, link_layer->buffer)){
     		ans[1] = link_layer->sequence_number == 0 ? SERIAL_C_REJ_N0 : SERIAL_C_REJ_N1;
+			++link_layer->rejNo;
+		}
     	else
     		ans[1] = link_layer->sequence_number == 0 ? SERIAL_C_RR_N0 : SERIAL_C_RR_N1;
     	ans[2] = ans[0] ^ ans[1];
 
     	write_frame(link_layer, ans, 3);
+		
    	}
 	alarm(0);
 	if (length <= 0)
@@ -609,6 +628,7 @@ int llwrite(LinkLayer link_layer, char* buf, int length){
 	reset_alarm();
     while (tries < link_layer->max_tries) {
    		write_frame(link_layer,frame,iLength);
+		++link_layer->iNo;
    		resend = FALSE;
     	alarm(3);
     	while (1) {
@@ -626,6 +646,7 @@ int llwrite(LinkLayer link_layer, char* buf, int length){
 				break;
 			}
         	if(rej_validator(link_layer->buffer, ansLength)){
+				++link_layer->rejNo;
         		if(link_layer->sequence_number == 0 && link_layer->buffer[C_FLAG_INDEX] == SERIAL_C_REJ_N0){
         			resend = TRUE;
         			break;

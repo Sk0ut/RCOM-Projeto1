@@ -13,5 +13,6 @@ int llread(LinkLayer link_layer, char *buf);
 int llclose(LinkLayer link_layer);
 void lldelete(LinkLayer link_layer);
 int get_max_message_size(LinkLayer link_layer);
+void lllog(LinkLayer link_layer);
 
 #endif // __LINKLAYER
