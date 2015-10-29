@@ -503,8 +503,8 @@ int llclose_transmitter(LinkLayer link_layer){
 
 void lllog(LinkLayer link_layer){
 	printf("Number of timeouts occured: %d\n",timeoutNo);
-	printf("Number of REJ frames %s: %d\n", link_layer->flag == TRANSMITTER ? "received", "transmitted", link_layer->rejNo);
-	printf("Number of I frames %s: %d\n", link_layer->flag == RECEIVER ? "received", "transmitted", link_layer->iNo);
+	printf("Number of REJ frames %s: %d\n", link_layer->flag == TRANSMITTER ? "received": "transmitted", link_layer->rejNo);
+	printf("Number of I frames %s: %d\n", link_layer->flag == RECEIVER ? "received": "transmitted", link_layer->iNo);
 }
 
 int llclose_receiver(LinkLayer link_layer) {
