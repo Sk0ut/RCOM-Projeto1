@@ -390,7 +390,6 @@ int llopen_transmitter(LinkLayer link_layer) {
        	SERIAL_C_SET,
        	SERIAL_A_COM_TRANSMITTER^SERIAL_C_SET};
 
-
     int length;
     reset_alarm();
     while (tries < link_layer->max_tries) {
@@ -422,13 +421,18 @@ int llopen_receiver(LinkLayer link_layer) {
        SERIAL_A_ANS_RECEIVER^SERIAL_C_UA};
 
     int length;
-    while (1) {
+	
+	alarm(link_layer->max_tries * link_layer->timeout);
+    while (tries == 0) {
         length = read_frame(link_layer);
         if (length <= 0)
             continue;        
         if(is_valid_string(link_layer->buffer,length) && set_validator(link_layer->flag, link_layer->buffer, length))
            break;
    }
+	alarm(0);
+	if (length <= 0)
+	return -1; 
 
    write_frame(link_layer, ua, 3);
    return 0;
@@ -466,22 +470,22 @@ int llclose_transmitter(LinkLayer link_layer){
     int length;
     reset_alarm();
     while (tries < link_layer->max_tries) {
-    write_frame(link_layer,disc,3);
-    alarm(3);
-    while (1) {
-        length = read_frame(link_layer);
-        if (length <= 0)
-            break;
+   		write_frame(link_layer,disc,3);
+  		alarm(link_layer->timeout);
+   		while (1) {
+        	length = read_frame(link_layer);
+        	if (length <= 0)
+           	 	break;
 
-        if(is_valid_string(link_layer->buffer,length) && disc_validator(link_layer->flag, link_layer->buffer, length)) {
-            alarm(0);
-            break;
-        }
+	        if(is_valid_string(link_layer->buffer,length) && disc_validator(link_layer->flag, link_layer->buffer, length)) {
+    	        alarm(0);
+    	        break;
+        	}
+    	}
+    	if (length > 0)
+        	break;
     }
-    if (length != -1)
-        break;
-    }
-
+	alarm(0);
     if (tries == link_layer->max_tries)    
         return -1;
 
@@ -492,30 +496,36 @@ int llclose_transmitter(LinkLayer link_layer){
 int llclose_receiver(LinkLayer link_layer) {
     char disc[] = {SERIAL_A_COM_RECEIVER, SERIAL_C_DISC, SERIAL_A_COM_RECEIVER^SERIAL_C_DISC};
     int length;
-    while (1) {
+
+	reset_alarm();
+	alarm(link_layer->max_tries * link_layer->timeout);
+    while (tries == 0) {
         length = read_frame(link_layer);
         if (length <= 0)
             continue;        
         if(is_valid_string(link_layer->buffer,length) && disc_validator(link_layer->flag, link_layer->buffer, length))
            break;
     }
-	
+	alarm(0);
+	if (length <= 0)
+		return -1;
+
     reset_alarm();
     while (tries < link_layer->max_tries) {
-    write_frame(link_layer,disc,3);
-    alarm(3);
-    while (1) {
-        length = read_frame(link_layer);
-        if (length <= 0)
-            break;
+		write_frame(link_layer,disc,3);
+		alarm(link_layer->timeout);
+		while (1) {
+		    length = read_frame(link_layer);
+		    if (length <= 0)
+		        break;
 
-        if(is_valid_string(link_layer->buffer,length) && ua_validator(link_layer->flag, link_layer->buffer, length)) {
-            alarm(0);
-            break;
-        }
-	}
-   	if (length != -1)
-    	break;
+		    if(is_valid_string(link_layer->buffer,length) && ua_validator(link_layer->flag, link_layer->buffer, length)) {
+		        alarm(0);
+		        break;
+		    }
+		}
+	   	if (length > 0)
+			break;
     }
 
     if (tries == link_layer->max_tries)    
