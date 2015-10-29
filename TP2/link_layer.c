@@ -549,7 +549,7 @@ int llclose_receiver(LinkLayer link_layer) {
     return 0;
 }
 
-int llread(LinkLayer link_layer, char *buf){
+int llread(LinkLayer link_layer, uint8_t *buf){
 	int length;
 	char ans[3];
 
@@ -607,7 +607,7 @@ int llread(LinkLayer link_layer, char *buf){
    	return length-4;
 }
 
-int llwrite(LinkLayer link_layer, char* buf, int length){
+int llwrite(LinkLayer link_layer, uint8_t* buf, int length){
 	int iLength = length+4;
 	char frame[iLength];
 
