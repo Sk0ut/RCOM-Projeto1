@@ -17,10 +17,12 @@
 #define PACKAGE_END 2
 #define PACKAGE_T_SIZE 0
 #define PACKAGE_T_NAME 1
+#define MAX_FILENAME_SIZE 255
+
 
 typedef struct {
 	int fd;
-	char name[255];
+	char name[MAX_FILENAME_SIZE];
 	uint32_t size;
 } File_info_t;
 
@@ -110,7 +112,7 @@ int app_transmitter(int argc, char **argv) {
 	int baudrate = BAUDRATE;
 	int max_tries = 3;
 	int timeout = 3;
-	int max_frame_size = 255;
+	int max_frame_size = 256;
 	char* filePath = argv[3];
 
 	sscanf(argv[2],"/dev/ttyS%d",&port);
@@ -482,8 +484,10 @@ int app_receiver(int argc, char **argv) {
 		printf("Error: Reported size (%d bytes) differs from expected size (%d bytes)\n", reported_size, file_info.size);
 	}
 
-	printf("Data received\nClosing connection...\n");
+	printf("Data received\n");
+	printf("Transfered file: %s\n", file_info.name);
 	
+	printf("Closing connection...\n");
 	if (llclose(link_layer) != 0){
 		printf("Error: Unable to close the connection\n");
 		return 1;
