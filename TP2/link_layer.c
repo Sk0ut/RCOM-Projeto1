@@ -105,25 +105,20 @@ int is_valid_combination(const char a, const char c){
 
 /* Validates I String Header */
 int is_valid_i(const char* string, int string_length){
-	printf("I string validation\n");
 	if(string_length < 5) //Pressupoe que e mandado pelo menos 1 byte de data
 		return FALSE;
-	//printf("Valid length\n");
 		
 	if(!is_a_flag(string[A_FLAG_INDEX])){
 		return FALSE;
 	}
-	//printf("Valid A flag\n");
 
 	if(!is_c_flag(string[C_FLAG_INDEX])){
 		return FALSE;
 	}
-	//printf("Valid C flag\n");
 
 	if(!is_valid_bcc(string[A_FLAG_INDEX],string[C_FLAG_INDEX], string[BCC_FLAG_INDEX])){
 		return FALSE;
 	}
-	//printf("Valid BCC\n");
 
 	return TRUE;
 }
@@ -197,7 +192,6 @@ int rej_validator (char* buffer, int length){
 
 void sig_alarm_handler(int sig) {
     if (sig == SIGALRM) {
-        printf("Alarm!\n");
         ++tries;
     }
 }
@@ -212,7 +206,6 @@ int read_frame(LinkLayer link_layer) {
 	int res;
 
 	do {
-        printf("Reading from port\n");
 		res = read(link_layer->fd, &c, 1);
 		if (res < 1)
 			return -1;
@@ -248,16 +241,11 @@ int read_frame(LinkLayer link_layer) {
 		} while(length < link_layer->max_frame_size);
 
 		if (length == link_layer->max_frame_size) {
-			printf("frame exceeded max size\n");
+			printf("Error: Frame exceeded max size\n");
 			return -1;
 		}
 	}
 
-	int i;
-	printf("Values read: ");
-	for (i = 0; i < length; ++i)
-		printf("0x%.2x ", link_layer->buffer[i]);
-	printf("\n");
 	return length;
 }
 
@@ -343,7 +331,6 @@ LinkLayer llinit(int port, int flag, unsigned int baudrate, unsigned int max_tri
   		perror("tcsetattr");
   		return NULL;
 	}
-		printf("Port configured\n");
 
 	/* Open the serial port for sending the message */
    
@@ -393,20 +380,16 @@ int llopen_transmitter(LinkLayer link_layer) {
        	SERIAL_A_COM_TRANSMITTER^SERIAL_C_SET};
 
 
-  	printf("Transmitter open sequence\n");
     int length;
     reset_alarm();
     while (tries < link_layer->max_tries) {
-    	printf("Sending SET\n");
       	write_frame(link_layer,set,3);
        	alarm(link_layer->timeout);
        	while (1) {
            	length = read_frame(link_layer);
            	if (length == -1)
                	break;
-           	printf("Validating string\n");
            	if(is_valid_string(link_layer->buffer,length) && ua_validator(link_layer->flag, link_layer->buffer, length)) {
-          		printf("Valid string\n"); 
               	alarm(0);
                	break;
            	}
@@ -422,7 +405,6 @@ int llopen_transmitter(LinkLayer link_layer) {
 }
 
 int llopen_receiver(LinkLayer link_layer) {
-	printf("Receiver open sequence\n");
 
     char ua[] = {SERIAL_A_ANS_RECEIVER,
        SERIAL_C_UA,
@@ -433,7 +415,6 @@ int llopen_receiver(LinkLayer link_layer) {
         length = read_frame(link_layer);
         if (length <= 0)
             continue;        
-        printf("Validating string\n");
         if(is_valid_string(link_layer->buffer,length) && set_validator(link_layer->flag, link_layer->buffer, length))
            break;
    }
@@ -451,7 +432,6 @@ int llclose(LinkLayer link_layer){
 	else
 		return -1;
 	
-	printf("Restoring port configurations\n");
 	if (tcsetattr(link_layer->fd,TCSANOW,&(link_layer->oldtio)) == -1) {
        perror("tcsetattr");
        return -1;
@@ -475,7 +455,6 @@ int llclose_transmitter(LinkLayer link_layer){
     int length;
     reset_alarm();
     while (tries < link_layer->max_tries) {
-    printf("Sending DISC Transmitter\n");
     write_frame(link_layer,disc,3);
     alarm(3);
     while (1) {
@@ -483,9 +462,7 @@ int llclose_transmitter(LinkLayer link_layer){
         if (length <= 0)
             break;
 
-        printf("Validating string\n");
         if(is_valid_string(link_layer->buffer,length) && disc_validator(link_layer->flag, link_layer->buffer, length)) {
-            printf("Valid string\n"); 
             alarm(0);
             break;
         }
@@ -508,14 +485,12 @@ int llclose_receiver(LinkLayer link_layer) {
         length = read_frame(link_layer);
         if (length <= 0)
             continue;        
-        printf("Validating string\n");
         if(is_valid_string(link_layer->buffer,length) && disc_validator(link_layer->flag, link_layer->buffer, length))
            break;
     }
 	
     reset_alarm();
     while (tries < link_layer->max_tries) {
-    printf("Sending DISC Receiver\n");
     write_frame(link_layer,disc,3);
     alarm(3);
     while (1) {
@@ -523,9 +498,7 @@ int llclose_receiver(LinkLayer link_layer) {
         if (length <= 0)
             break;
 
-        printf("Validating string\n");
         if(is_valid_string(link_layer->buffer,length) && ua_validator(link_layer->flag, link_layer->buffer, length)) {
-            printf("Valid string\n"); 
             alarm(0);
             break;
         }
@@ -547,18 +520,11 @@ int llread(LinkLayer link_layer, char *buf){
 
     while (1) {
         length = read_frame(link_layer);
-		printf("read length: %d\n", length);
         if (length <= 0)
             continue;
-		printf("Read I String:");
-		int i;
-		for (i = 0; i < length; ++i)
-			printf(" 0x%.2x", link_layer->buffer[i]);
-		printf("\n");
-        printf("Validating string\n");
+
         if(is_valid_string(link_layer->buffer,length) == FALSE)
         	continue;
-		printf("Valid Header\n");
 		
 		if(length == 3) {
 			if(set_validator(link_layer->flag, link_layer->buffer, length)){
@@ -570,7 +536,6 @@ int llread(LinkLayer link_layer, char *buf){
 			continue;
 		}
 		
-		printf("I frame\n");
 	    if(i_valid_bcc2(link_layer, link_layer->buffer,length) && is_expected_i(link_layer, link_layer->buffer) && !generate_error())
 	    	break;
 
@@ -581,7 +546,6 @@ int llread(LinkLayer link_layer, char *buf){
     		ans[1] = link_layer->sequence_number == 0 ? SERIAL_C_RR_N0 : SERIAL_C_RR_N1;
     	ans[2] = ans[0] ^ ans[1];
 
-		printf("Sending REJ\n");
     	write_frame(link_layer, ans, 3);
    	}
 	memcpy(buf, &(link_layer->buffer[3]), length-4);
@@ -590,7 +554,6 @@ int llread(LinkLayer link_layer, char *buf){
    	ans[1] = link_layer->sequence_number == 0 ? SERIAL_C_RR_N1 : SERIAL_C_RR_N0;
 	ans[2] = ans[0] ^ ans[1];
 
-	printf("Sending RR\n");
 	write_frame(link_layer,ans,3);
 
 	link_layer->sequence_number = 1 - link_layer->sequence_number;
@@ -618,7 +581,6 @@ int llwrite(LinkLayer link_layer, char* buf, int length){
 	int resend;
 	reset_alarm();
     while (tries < link_layer->max_tries) {
-    	printf("Sending I string\n");
    		write_frame(link_layer,frame,iLength);
    		resend = FALSE;
     	alarm(3);
@@ -628,20 +590,15 @@ int llwrite(LinkLayer link_layer, char* buf, int length){
         		resend = TRUE;
         		break;
         	}
-        	printf("Validating string(size: %d)\n", ansLength);
 
         	if(!is_valid_string(link_layer->buffer,ansLength))
         		continue;
-			printf("Valid string");
         	if(ansLength != 3)
         		continue;
-			printf("U frame\n");
         	if(rr_validator(link_layer->buffer, ansLength)) {
-        		printf("RR frame\n");
 				break;
 			}
         	if(rej_validator(link_layer->buffer, ansLength)){
-				printf("REJ frame\n");
         		if(link_layer->sequence_number == 0 && link_layer->buffer[C_FLAG_INDEX] == SERIAL_C_REJ_N0){
         			resend = TRUE;
         			break;

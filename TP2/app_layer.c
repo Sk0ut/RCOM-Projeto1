@@ -191,21 +191,12 @@ int app_transmitter(int argc, char **argv) {
 	}
 
 	LinkLayer link_layer = llinit(port, flag, baudrate, max_tries, timeout, max_frame_size);
-	printf("port: %d\n", port);
-	printf("flag: %d\n", flag);
-	printf("baudrate: %d\n", baudrate);
-	printf("max_tries: %d\n", max_tries);
-	printf("timeout: %d\n", timeout);
-	printf("max_frame_size: %d\n", max_frame_size);
-	printf("filepath: %s\n", filePath);
 	
 	
 	if(get_file_info(&file_info, filePath) == -1){
 		printf("Can't open file: %s", filePath);
 		return 1;
 	}
-
-	printf("Fd: %d, Name: %s, Size:%d\n", file_info.fd, file_info.name, file_info.size);
 
 	if (llopen(link_layer) != 0)
 		return 1;
@@ -219,17 +210,13 @@ int app_transmitter(int argc, char **argv) {
 	segment[0] = PACKAGE_START;
 	segment[1] = PACKAGE_T_NAME;
 	uint8_t file_name_size = strlen(file_info.name) + 1;
-	printf("file name size: %d\n", file_name_size);
 	segment[2] = file_name_size;
 	memcpy(&(segment[3]), file_info.name, file_name_size);
-	printf("File name: %s\n", &(segment[3]));
 	segment[3+file_name_size] = PACKAGE_T_SIZE;
 	segment[4+file_name_size] = sizeof(uint32_t);
 	*((uint32_t *)&segment[5+file_name_size]) = file_info.size;
-	printf("File size: %d\n", *((int *)&(segment[5+file_name_size])));
 	
 	int i;
-	printf("Control package: ");
 	for(i= 0; i < file_name_size+9;i++){
 		printf("0x%x ",segment[i]);
 	}
@@ -244,7 +231,6 @@ int app_transmitter(int argc, char **argv) {
 	//Send data
 	int length;
 	unsigned char sequenceNumber = 0;
-	printf("Data packages:\n");
 	do {
 		length = read(file_info.fd, &(segment[4]), segmentSize);
 		
@@ -313,14 +299,14 @@ int app_receiver(int argc, char **argv) {
 	int changeMask[] = {FALSE, FALSE, FALSE, FALSE};
 	for(arg = 3; arg < argc; ++arg){
 		if((arg +1) == argc) {
-			printf("Error while parsing flag %s \n", argv[arg]);
+			printf("Error: Parsing flag %s \n", argv[arg]);
 			return 1;
 		}
 		if(strcmp(argv[arg],"-b") == 0){
 			if(changeMask[0] == FALSE){
 				changeMask[0] = TRUE;
 				if(sscanf(argv[++arg], "%d", &baudrate) != 1){
-					printf("Unrecognized value for flag -b\n");
+					printf("Error: Unrecognized value for flag -b\n");
 					return 1;
 				}
 				baudrate = parse_baudrate(baudrate);
@@ -333,7 +319,7 @@ int app_receiver(int argc, char **argv) {
 				
 			}
 			else {
-				printf("Baudrate defined more than once. First defined as value: %d\n", baudrate);
+				printf("Error: Baudrate defined more than once. First defined as value: %d\n", baudrate);
 				return 1;
 			}
 		}
@@ -347,7 +333,7 @@ int app_receiver(int argc, char **argv) {
 				
 			}
 			else {
-				printf("Timeout defined more than once. First defined as value: %d\n", timeout);
+				printf("Error: Timeout defined more than once. First defined as value: %d\n", timeout);
 				return 1;
 			}
 		}
@@ -361,7 +347,7 @@ int app_receiver(int argc, char **argv) {
 				
 			}
 			else {
-				printf("Maximum retransmission tries cap defined more than once. First defined as value %d\n", max_tries);
+				printf("Error: Maximum transmission tries cap defined more than once. First defined as value %d\n", max_tries);
 				return 1;
 			}
 		}
@@ -375,28 +361,22 @@ int app_receiver(int argc, char **argv) {
 				
 			}
 			else {
-				printf("Maximum I frame size defined more than once. First defined as value %d\n", max_frame_size);
+				printf("Error: Maximum I frame size defined more than once. First defined as value %d\n", max_frame_size);
 				return 1;
 			}
 		}
 		else {
-			printf("Unrecognized flag %s\n", argv[arg]);
+			printf("Error: Unrecognized flag %s\n", argv[arg]);
 			return 1;
 		}
 	}
 
 	if(port == -1){
-		printf("Unrecognized port: %s\n", argv[2]);
+		printf("Error: Unrecognized port: %s\n", argv[2]);
 		return 1;
 	}
 
 	LinkLayer link_layer = llinit(port, flag, baudrate, max_tries, timeout, max_frame_size);
-	printf("port: %d\n", port);
-	printf("flag: %d\n", flag);
-	printf("baudrate: %d\n", baudrate);
-	printf("max_tries: %d\n", max_tries);
-	printf("timeout: %d\n", timeout);
-	printf("max_frame_size: %d\n", max_frame_size);
 	
 	if (llopen(link_layer) != 0)
 		return 1;
@@ -409,15 +389,11 @@ int app_receiver(int argc, char **argv) {
 	int startSegmentLength = segmentLength;
 
 	if (segmentLength <= 0) {
-		printf("Error llread\n");
+		printf("Error: Failed to read start control package\n");
 		return 1;
 	}
 	
 	int i;
-	printf("Read:");
-	for (i = 0; i < segmentLength; ++i)
-		printf(" 0x%.2x", startSegment[i]);
-	printf("\n");
 	
 	File_info_t file_info;
 	
@@ -429,18 +405,16 @@ int app_receiver(int argc, char **argv) {
 			switch(type){
 				case PACKAGE_T_SIZE:
 					file_info.size = *((uint32_t *) &startSegment[i+2]);
-					printf("File info size: %d\n", file_info.size);
 					break;
 				case PACKAGE_T_NAME:
 					memcpy(file_info.name,&startSegment[i+2],size);
-					printf("File info name: %s\n", file_info.name);
 					break;
 			}
 			i += 2 + size;
 		}
 	}
 	else {
-		printf("Start package missing.\n");
+		printf("Error: Start package missing.\n");
 		return 1;
 	}
 
@@ -452,7 +426,7 @@ int app_receiver(int argc, char **argv) {
 		segmentLength = llread(link_layer, segment);
 	
 		if (segmentLength <= 0) {
-			printf("Error llread\n");
+			printf("Error: Failed to read data package.\n");
 			return 1;
 		}		
 		printf("Read:");
@@ -465,23 +439,23 @@ int app_receiver(int argc, char **argv) {
 			break;
 		
 		if (segment[0] == PACKAGE_START){
-			printf("Received duplicate start package\n");
+			printf("Error: Received duplicate start package\n");
 			return 1;
 		}
 
 		if (segment[0] == PACKAGE_DATA) {// copy to file
 			if (segmentLength < 4) {
-				printf("Wrong size for segment\n");
+				printf("Error: Wrong size for segment\n");
 				return 1;
 			}
 			if (segment[1] != sequenceNumber) {
-				printf("Package out of order\n");
+				printf("Error: Package out of order\n");
 				return 1;
 			}
 
 			uint16_t package_data_size = segment[2] << 8 | segment[3];
 			if (package_data_size != segmentLength - 4) {
-				printf("Reported package size and received size differ\n");
+				printf("Error: Reported package size and received size differ\n");
 				printf("Package data size: %d\n", package_data_size);
 				printf("Segment Length - 4 %d\n", (segmentLength - 4));
 				return 1;
@@ -493,7 +467,7 @@ int app_receiver(int argc, char **argv) {
 			++sequenceNumber;
 		}
 		else {
-			printf("Received unknown package type\n");
+			printf("Error: Received unknown package type\n");
 			return 1;
 		}
 	}
