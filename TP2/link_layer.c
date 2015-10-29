@@ -241,8 +241,11 @@ int read_frame(LinkLayer link_layer) {
 		} while(length < link_layer->max_frame_size);
 
 		if (length == link_layer->max_frame_size) {
-			printf("Error: Frame exceeded max size\n");
-			return -1;
+			do {
+				res = read(link_layer->fd, &c, 1);
+				if (res < 1)
+					return -1;
+			} while(c != SERIAL_FLAG);
 		}
 	}
 
@@ -344,6 +347,10 @@ LinkLayer llinit(int port, int flag, unsigned int baudrate, unsigned int max_tri
 
 	if(max_frame_size <= 6){
 		printf("Error: Maximum frame size too small\n");
+		return NULL;
+	}
+
+	if(max_frame_size > 65536){
 		return NULL;
 	}
 

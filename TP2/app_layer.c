@@ -303,7 +303,7 @@ int app_receiver(int argc, char **argv) {
 	int baudrate = BAUDRATE;
 	int max_tries = 3;
 	int timeout = 3;
-	int max_frame_size = 255;
+	int max_frame_size = 65536;
 
 	sscanf(argv[2],"/dev/ttyS%d",&port);
 
@@ -360,20 +360,6 @@ int app_receiver(int argc, char **argv) {
 			}
 			else {
 				printf("Error: Maximum transmission tries cap defined more than once. First defined as value %d\n", max_tries);
-				return 1;
-			}
-		}
-		else if(strcmp(argv[arg],"-i") == 0){
-			if(changeMask[3] == FALSE){
-				changeMask[3] = TRUE;
-				if(sscanf(argv[++arg], "%d", &max_frame_size) != 1){
-					printf("Unrecognized value for flag -i\n");
-					return 1;
-				}
-				
-			}
-			else {
-				printf("Error: Maximum I frame size defined more than once. First defined as value %d\n", max_frame_size);
 				return 1;
 			}
 		}
