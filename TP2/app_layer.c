@@ -252,10 +252,6 @@ int app_transmitter(int argc, char **argv) {
 				return 1;
 			}
 			
-			int j;
-			for (j = 0; j < length + 4; ++j)
-				printf("0x%.2x ", segment[j]);
-			printf("\n");
 			++sequenceNumber;
 		}
 	} while (length > 0);
