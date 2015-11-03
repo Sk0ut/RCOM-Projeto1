@@ -1,0 +1,422 @@
+\documentclass[11pt,a4paper,reqno]{article}
+\linespread{1.5}
+
+\usepackage[active]{srcltx}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{amsthm,amsfonts,amsmath,amssymb,indentfirst,mathrsfs,amscd}
+\usepackage[mathscr]{eucal}
+\usepackage[active]{srcltx} %inverse search
+\usepackage{tensor}
+\usepackage[utf8x]{inputenc}
+\usepackage[portuges]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{enumitem}
+\setlist{nolistsep}
+\usepackage{comment} 
+\usepackage{tikz}
+\usepackage[numbers,square, comma, sort&compress]{natbib}
+\usepackage[nottoc,numbib]{tocbibind}
+%\numberwithin{figure}{section}
+\numberwithin{equation}{section}
+\usepackage{scalefnt}
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+%\usepackage{tweaklist}
+%\renewcommand{\itemhook}{\setlength{\topsep}{0pt}%
+%	\setlength{\itemsep}{0pt}}
+%\renewcommand{\enumhook}{\setlength{\topsep}{0pt}%
+%	\setlength{\itemsep}{0pt}}
+%\usepackage[colorlinks]{hyperref}
+\usepackage{MnSymbol}
+%\usepackage[pdfpagelabels,pagebackref,hypertexnames=true,plainpages=false,naturalnames]{hyperref}
+\usepackage[naturalnames]{hyperref}
+\usepackage{enumitem}
+\usepackage{titling}
+\newcommand{\subtitle}[1]{%
+	\posttitle{%
+	\par\end{center}
+	\begin{center}\large#1\end{center}
+	\vskip0.5em}%
+}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\usepackage{caption}
+\usepackage{etoolbox}% http://ctan.org/pkg/etoolbox
+\usepackage{complexity}
+
+\usepackage[official]{eurosym}
+
+\def\Cpp{C\raisebox{0.5ex}{\tiny\textbf{++}}}
+
+\makeatletter
+\def\@makechapterhead#1{%
+  %%%%\vspace*{50\p@}% %%% removed!
+  {\parindent \z@ \raggedright \normalfont
+    \ifnum \c@secnumdepth >\m@ne
+        \huge\bfseries \@chapapp\space \thechapter
+        \par\nobreak
+        \vskip 20\p@
+    \fi
+    \interlinepenalty\@M
+    \Huge \bfseries #1\par\nobreak
+    \vskip 40\p@
+  }}
+\def\@makeschapterhead#1{%
+  %%%%%\vspace*{50\p@}% %%% removed!
+  {\parindent \z@ \raggedright
+    \normalfont
+    \interlinepenalty\@M
+    \Huge \bfseries  #1\par\nobreak
+    \vskip 40\p@
+  }}
+\makeatother
+
+\usepackage[toc,page]{appendix}
+
+\addto\captionsportuges{%
+  \renewcommand\appendixname{Anexo}
+  \renewcommand\appendixpagename{Anexos}
+}
+
+\addto\captionsportuges{%
+  \renewcommand\abstractname{Sumário}
+}
+
+\begin{document}
+
+
+
+\begin{titlepage}
+\begin{center}
+ 
+\vspace*{3cm}
+
+{\Large Redes de Computadores}\\[2cm]
+
+% Title
+{\Huge \bfseries Protocolo de Liga\c{c}\~ao de Dados \\[1cm]}
+
+% Author
+{\large \^Flávio Couto, João Gouveia e Pedro Afonso Castro}\\[2cm]
+
+\includegraphics[width=10cm]{feup_logo.jpg}\\[2cm]
+
+
+% Bottom of the page
+{\large \today}
+
+\end{center}
+\end{titlepage}
+
+%%%%%%%%%%%
+% SUMARIO %
+%%%%%%%%%%%
+\begin{abstract}
+No âmbito da unidade curricular de Redes de Computadores, foi-nos proposta a elaboração de uma aplicação que permitia a transferência de dados entre dois computadores através da porta de série. Para tal, recorremos à implementação de duas camadas: a camada de ligação de dados e a camada da aplicação.
+
+O nosso grupo soube compreender bem os objetivos propostos, tendo implementado com sucesso não só estes mesmos objetivos, como alguns elementos de valorização propostos pelos docentes, servindo este relatório para mostrar isso mesmo.
+\end{abstract}
+
+\tableofcontents
+
+%%%%%%%%%%%%%%
+% INTRODUCAO %
+%%%%%%%%%%%%%%
+\section{Introdução}
+
+O objetivo deste trabalho é implementar, num ambiente Linux, um protocolo de ligação de dados, recorrendo à porta de série. Assim, dois computadores poderão enviar dados um para o outro através deste protocolo, desde que estejam ligados por uma porta de série e tenham a capacidade de interpretar chamadas POSIX.
+
+No que toca ao relatório, este tem como objetivo apresentar uma descrição detalhada deste trabalho, mostrando a sua arquitetura, estrutura do código, explicando os protocolos utilizados e mostrando resultados de testes efetuados.
+
+%%%%%%%%%%%%%%%%%%%%
+%    ARQUITETURA   %
+%%%%%%%%%%%%%%%%%%%%
+\section{Arquitetura}
+
+Para o projeto, foram usados dois PCs com sistema operativo Linux, ligados através de uma porta de série em modo não canónico e assíncrono.
+Utilizamos também uma estruturação em camadas para o código, em que cada uma das camadas é independente das outras. O nosso projeto está dividido em duas camadas: ligação de dados e aplicação. A camada de ligação de dados trata dos detalhes relativos ao protocolo de ligação de dados, bem como do \textit{byte stuffing} e \textit{byte destuffing}, abstraindo-se da informação contida nos pacotes que por si passam. Já a camada da aplicação efetua a divisão da informação em pacotes e respetivo processamento, enviando cada um à camada de ligação de dados, através de uma API disponibilizada por esta.
+
+%%%%%%%%%%%%%%%%%%%%
+% ESTRUTURA CODIGO %
+%%%%%%%%%%%%%%%%%%%%
+\section{Estrutura do código}
+
+\subsection{Camada de aplicação}
+
+A implementação da camada de aplicação encontra-se no ficheiro \textit{applayer.c}. A camada contém uma estrutura de dados referente ao ficheiro a ser enviado/recebido, onde guardamos o descritor do ficheiro, o seu nome e o seu tamanho.
+
+\lstinputlisting[language=C,firstline=21,lastline=25]{TP2/app_layer.c}
+
+As principais funções da camada de aplicação são as seguintes:
+
+\begin{lstlisting}[language=C]
+int app_transmitter(int argc, char **argv);
+int app_receiver(int argc, char **argv);
+int get_file_info(File_info_t* file_info, char* filePath);
+\end{lstlisting}
+
+\subsection{Camada de ligação de dados}
+
+A implementação da camada de ligação de dados encontra-se nos ficheiros \textit{linklayer.c} e \textit{linklayer.h}. A camada contém uma estrutura de dados onde é guardado o descritor da porta série, o baudrate, o tempo de espera após falha de tranmissão, antes de ocorrer nova tentativa, o número de tentativas, o tamanho máximo das tramas I, uma flag contendo a informação de se a instância representa um transmissor ou recetor, uma estrutura de dados contendo as configurações anteriores à utilização do programa, uma variável que nos diz se a próxima trama a enviar/receber é do tipo I0 ou I1, um buffer utilizado para transmissão de informação e por último, informação acerca dos REJ recebidos e tramas I enviadas/recebidas (para efeitos de estatística).
+
+\lstinputlisting[language=C,firstline=29,lastline=41]{TP2/link_layer.c}
+
+As principais funções da camada de ligação de dados são as seguintes:
+
+\begin{lstlisting}[language=C, breaklines=true]
+LinkLayer llinit(int port, int flag, unsigned int baudrate, unsigned int max_tries, unsigned int timeout, unsigned int max_frame_size);
+int llopen(LinkLayer link_layer);
+int llclose(LinkLayer link_layer;
+int llread(LinkLayer link_layer, uint8_t *buf);
+int llwrite(LinkLayer link_layer, uint8_t* buf, int length);
+void lldelete(LinkLayer link_layer);
+\end{lstlisting}
+
+Temos também um ficheiro utils.h, que contém constantes simbólicas utilizadas nos vários ficheiros, e uma Makefile, utilizada para compilar mais facilmente o projeto.
+
+%%%%%%%%%%%%%
+% CASOS USO %
+%%%%%%%%%%%%%
+\section{Casos de uso principais}
+
+A aplicação resultante do trabalho contém dois casos de uso: o caso em que o programa funciona como emissor e o caso em que funciona como recetor. 
+
+\vspace{5mm}
+
+No caso em que o programa funciona como emissor, temos a seguinte sequência de chamada de funções:
+
+\begin{itemize}
+	\item O main começa por chamar a função \textbf{app\textunderscore transmitter}, que faz o parse das flags inseridas pelo utilizador, cria uma instância de LinkLayer recorrendo à função \textbf{llinit}.
+	\item Depois dessa instância ter sido criada com sucesso, tenta estabelecer uma conexão com o recetor através da função \textbf{llopen}.
+	\item Estabelecida a conexão, envia o primeiro pacote de controlo, os pacotes de informação e o segundo pacote de controlo, através da função \textbf{llwrite}.
+	\item Seguidamente, após a informação ter sido enviada, a conexão é fechada recorrendo à função \textbf{llclose}.
+	\item Depois de fechada a conexão, o programa imprime as estatísticas recorrendo à função \textbf{lllog}.
+	\item Por último, destrói a instância de LinkLayer recorrendo à função \textbf{llclose}.
+\end{itemize}
+
+\vspace{5mm}
+
+É importante referir também que as funções \textbf{llopen} e \textbf{llclose} recorrem às funções auxiliares \textbf{llopen\textunderscore transmitter} e \textbf{llclose\textunderscore transmitter}, respetivamente, para fazer as tarefas de transmissão. Estas funções ainda invocam funções auxiliares, mas a explicação da função dessas funções será dada mais à frente na secção \ref{sec:linklayer}.
+
+\vspace{5mm}
+
+No caso em que o programa funciona como recetor, temos a seguinte sequência de chamada de funções:
+
+\begin{itemize}
+	\item O main começa por chamar a função \textbf{app\textunderscore receiver}, que faz o parse das flags inseridas pelo utilizador, cria uma instância de LinkLayer recorrendo à função \textbf{llinit}.
+	\item Depois dessa instância ter sido criada com sucesso, tenta estabelecer uma conexão com o transmissor através da função \textbf{llopen}.
+	\item Estabelecida a conexão, recebe o primeiro pacote de controlo, os pacotes de informação e o segundo pacote de controlo, através da função \textbf{llread}.
+	\item Seguidamente, após a informação ter sido recebida, a conexão é fechada recorrendo à função \textbf{llclose}.
+	\item Depois de fechada a conexão, o programa imprime as estatísticas recorrendo à função \textbf{lllog}.
+	\item Por último, destrói a instância de LinkLayer recorrendo à função \textbf{llclose}.
+\end{itemize}
+
+\vspace{5mm}
+
+Tal como no emissor, as funções \textbf{llopen} e \textbf{llclose} recorrem a funções auxiliares para fazer as tarefas de receção de informação. Estas chamam-se \textbf{llopen\textunderscore receiver} e \textbf{llclose\textunderscore receiver}, respetivamente. As funções auxiliares que estas usam também serão explicadas na secção \ref{sec:linklayer}.
+
+%%%%%%%%%%%%%%%%%%
+% LIGACAO LOGICA %
+%%%%%%%%%%%%%%%%%%
+\section{Protocolo de ligação lógica}
+\label{sec:linklayer}
+
+A camada de ligação de dados é responsável pelas seguintes funcionalidades:
+
+\begin{itemize}
+	\item Estabelecer a ligação entre o emissor e o recetor.
+	\item Enviar e receber pacotes de informação, contendo \textit{flags} e mensagens.
+	\item Fazer \textit{byte stuffing} e \textit{byte destuffing} da informação recebida, consoante a necessidade.
+	\item Validar as tramas recebidas.
+\end{itemize}
+
+\subsection{API disponibilizada à camada de aplicação - LinkLayer}
+
+A camada de ligação de dados disponibiliza uma API para a camada de aplicação utilizar como achar necessário. Nesta API estão contidas 8 funções.
+
+\subsubsection{llinit}
+
+A função \textbf{llinit} cria uma instância da estrutura de dados LinkLayer, funcionando como um "construtor". Esta função inicializa os valores que a camada de ligação de dados precisa com os valores fornecidos pelo utilizador, ou, no caso de este não fornecer algum valor, com valores por predefinição.
+
+\subsubsection{llopen}
+
+A função \textbf{llopen} é responsável por estabelecer uma ligação através da porta de série.
+
+Quando invocada pelo emissor, esta função envia uma \textit{flag} SET, aguardando por uma resposta do recetor sob a forma de uma \textit{flag} UA. Se esta resposta não chegar, o emissor espera um predeterminado número de segundos (definido na variável \textit{timeout}) e tenta reenviar o SET. Se após um número de tentativas estipulado (na variável \textit{max\textunderscore tries} o emissor continuar sem receber o UA, a tentativa de ligação é abortada. Em caso contrário, isso significa que a ligação foi corretamente estabelecida.
+
+Quando invocada pelo recetor, esta função espera por uma \textit{flag} SET, e, quando a recebe, envia uma \textit{flag} UA. Se não receber o SET ao fim de \textit{max\textunderscore tries} x \textit{timeout}, a tentativa de ligação é abortada. Caso contrário, significa que a ligação foi corretamente estabelecida.
+
+\subsubsection{llwrite}
+
+A função \textbf{llwrite} é utilizada pelo emissor como forma de enviar informação para a porta de série. Recebe um buffer, bem como o seu tamanho, que contêm o conteúdo a enviar.
+
+Recorre à função \textbf{write\textunderscore frame} para enviar esse conteúdo. Esta função prepara as flags, juntando-as ao buffer, e envia a informação pela porta de série.
+
+Depois de terminado o processo de envio, a função llwrite espera por uma resposta do recetor, que pode ser uma \textit{flag} RR se a mensagem tiver sido transmitida corretamente, ou uma \textit{flag} REJ se a mensagem não tiver sido transmitida corretamente, sendo esta retransmitida até ser corretamente aceite ou houver um \textit{timeout}.
+
+\subsubsection{llread}
+
+A função \textbf{llread} é utilizada pelo recetor para receber informação da porta de série. Recebe um buffer onde é colocada a informação que vem no pacote.
+
+Caso receba informação inválida, envia a \textit{flag} REJ. Caso contrário, envia a \textit{flag} RR. Recorre à função \textbf{read\textunderscore frame} para receber o conteúdo. Esta função espera \textit{max\textunderscore tries} x \textit{timeout} segundos antes de abortar a ligação.
+
+\subsubsection{llclose}
+
+A função \textbf{llclose} é responsável por terminar a ligação. Se o invocador da função for o emissor, esta começará por enviar uma \textit{flag} DISC, e aguardará pela recepção da mesma flag. Quando a receber, envia a \textit{flag} UA e termina. No caso do recetor, espera por uma \textit{flag} DISC, reenviando-a, para por último receber uma flag \textit{flag} UA e terminar a ligação.
+
+\subsubsection{lldelete}
+
+A função \textbf{lldelete} destrói uma instância de LinkLayer, libertando todo o espaço de memória associado a esta, funcionando como um "destrutor" da estrutura de dados.
+
+\subsubsection{lllog}
+
+A função \textbf{lllog} imprime no ecrã estatísticas após o término da ligação entre o emissor e o recetor.
+
+\subsubsection{get\textunderscore max\textunderscore message\textunderscore size}
+
+A função \textbf{get\textunderscore max\textunderscore message\textunderscore size} retorna o tamanho máximo que pode ter uma trama do tipo I sem as flags necessárias.
+
+
+%%%%%%%%%%%%%
+% APLICACAO %
+%%%%%%%%%%%%%
+\section{Protocolo de aplicação}
+
+A camada da aplicação é responsável pelas seguintes funcionalidades:
+
+\begin{itemize}
+	\item Envio de pacotes de controlo.
+	\item Envio do ficheiro em questão, sob a forma de pacotes de dados.
+\end{itemize}
+
+\subsection{Pacotes do nível de aplicação}
+
+A aplicação envia dois tipos de pacotes: \textbf{pacotes de controlo} e \textbf{pacotes de dados}. Os pacotes de controlo podem ser classificados como inicial ou final, distinguidos através do primeiro byte.
+
+\subsection{Envio e recepção dos pacotes}
+
+Os pacotes de controlo marcam o início e o fim da transmissão de um ficheiro, enquanto que os pacotes de dados contêm a informação do ficheiro propriamente dita. O envio/receção é efeito pelas funções abaixo:
+
+\begin{lstlisting}[language=C]
+int app_transmitter(int argc, char **argv);
+int app_receiver(int argc, char **argv);
+\end{lstlisting}
+
+A função de envio coloca no pacote inicial a informação referente ao ficheiro (nome, tamanho), e envia-o através da função llwrite. A função de recepção recebe este pacote e processa-o. Este processo é repetido para o pacote final. Quanto ao pacote de dados, o processo é semelhante, só que a informação colocada pelo emissor é o tipo de pacote e o seu tamanho.
+
+%%%%%%%%%%%%%
+% VALIDACAO %
+%%%%%%%%%%%%%
+\section{Validação}
+
+Para avaliar a fiabilidade do protocolo implementado no que ao envio e recepção de ficheiros toca, foram realizados vários testes.
+
+Foi removido o cabo durante a transferência de informação, sendo novamente reposto ao fim de poucos segundos. A aplicação soube continuar a transferência após a retoma da conexão.
+
+Também experimentámos separar os cabos, esfregar a porta de série com um objeto metálico e ligá-los outra vez. A aplicação soube descartar os pacotes inválidos e retomar a transferência após os cabos serem ligados.
+
+Também experimentámos enviar outro tipo de ficheiros - ficheiros de texto, outras imagens e uma música. Foram todos enviados sem erros.
+
+%%%%%%%%%%%%%%%
+% VALORIZACAO %
+%%%%%%%%%%%%%%%
+\section{Elementos de valorização}
+
+\subsection{Selecção de parâmetros pelo utilizador}
+
+O utilizador pode, se assim o entender, alterar as definições que entender, recorrendo a \textit{flags}. Abaixo mostramos a mensagem de erro mostrada pela aplicação que contém esta informação:
+
+Usage: ./nserial TRANSMITTER /dev/ttyS<portNo> <filepath> <flags>
+
+Flags: -b [BAUDRATE] - Sets the baudrate.
+
+       -t [TIMEOUT] - Sets the timeout before attempting to retransmit (default: 3).
+       
+       -m [MAXTRIES] - Sets the maximum mumber of tries to transmit a message (default: 3).
+       
+       -i [MAX\textunderscore I\textunderscore FRAME\textunderscore SIZE] - Sets the maximum I frame size (before stuffing) (default: 255).
+
+\subsection{Geração aleatória de erros em tramas I}
+
+A aplicação, para cada trama I correntamente recebida simula no receptor a ocorrência de um erro 20\% das vezes, e procede como se de um erro real se tratasse.
+
+\subsection{Implementação de REJ}
+
+Quando ocorre um erro na \textit{flag} \textbf{BCC2} na função llread, a \textit{flag} REJ é automaticamente enviada para que o emissor envie a mensagem que não chegou ao recetor corretamente.
+
+\subsection{Verificação da integridade dos dados pela aplicação}
+
+A aplicação verifica que o tamanho do ficheiro recebido é igual ao tamanho do ficheiro enviado. Também verifica se o pacote recebido pelo recetor era o esperado, terminando a ligação imediatamente caso não seja.
+
+\subsection{Registo de ocorrências}
+
+A aplicação vai registando ao longo do tempo de execução as ocorrências de \textit{flags} RR, REJ e o número de tramas I recebidas/enviadas, sendo estas estatísticas exibidas após o fim da transmissão de dados.
+
+
+
+%%%%%%%%%%%%%%
+% CONCLUSOES %
+%%%%%%%%%%%%%%
+\section{Conclusões}
+
+O grupo compreendeu bem todos os pontos pedidos no guião e soube resolver todos os problemas que lhe foram propostos, tendo inclusivé implementado todos os elementos de valorização sugeridos.
+
+O projeto foi dividido em duas camadas: camada de ligação de dados e camada da aplicação. A camada da aplicação é uma camada de alto nível, enquanto que a camada de ligação de dados é uma camada de baixo nível. A camada da aplicação trata de enviar os pacotes de dados e de controlo, enquanto que a camada de ligação de dados trata de enviar as \textit{flags} SET, UA, I, RR, REJ e DISC e de fazer o \textit{byte stuffing} e \textit{byte destuffing}.
+
+Gostaríamos de agradecer à nossa docente pelo apoio prestado nas aulas, sem o qual nos teria sido muito mais díficil e demorado fazer este projeto, nomeadamente no que à compreensão dos vários tipos de \textit{flags} bem como a informação nelas contida.
+
+A realização deste projeto contribuiu para uma melhor compreensão do funcionamento de um protocolo de transferência de dados e do aprofundamento dos conhecimentos em relação à porta de série, que já tinhamos utilizado previamente na unidade curricular de Laboratório de Computadores.
+
+%%%%%%%%%%%%%%%%
+% BIBLIOGRAPHY %
+%%%%%%%%%%%%%%%%
+\bibliographystyle{IEEEtran}
+\bibliography{rabb,refs}
+
+\begin{appendices}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% APENDICE - CODIGO FONTE %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Código Fonte}
+
+\begin{Large}
+linklayer.c:
+\end{Large}
+
+\lstinputlisting[language=C, breaklines=true]{TP2/link_layer.c}
+
+\begin{Large}
+linklayer.h:
+\end{Large}
+
+\lstinputlisting[language=C, breaklines=true]{TP2/linklayer.h}
+
+\vspace{15mm}
+
+\begin{Large}
+applayer.c:
+\end{Large}
+
+\lstinputlisting[language=C, breaklines=true]{TP2/app_layer.c}
+
+\vspace{15mm}
+
+\begin{Large}
+utils.h:
+\end{Large}
+
+\lstinputlisting[language=C, breaklines=true]{TP2/utils.h}
+
+\vspace{15mm}
+
+\begin{Large}
+Makefile:
+\end{Large}
+
+\lstinputlisting{TP2/Makefile}
+
+\vspace{15mm}
+
+\end{appendices}
+
+\end{document}
