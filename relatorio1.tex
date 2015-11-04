@@ -96,7 +96,7 @@
 {\Huge \bfseries Protocolo de Liga\c{c}\~ao de Dados \\[1cm]}
 
 % Author
-{\large \^Flávio Couto, João Gouveia e Pedro Afonso Castro}\\[2cm]
+{\large Flávio Couto, João Gouveia e Pedro Afonso Castro}\\[2cm]
 
 \includegraphics[width=10cm]{feup_logo.jpg}\\[2cm]
 
@@ -156,7 +156,7 @@ int get_file_info(File_info_t* file_info, char* filePath);
 
 \subsection{Camada de ligação de dados}
 
-A implementação da camada de ligação de dados encontra-se nos ficheiros \textit{linklayer.c} e \textit{linklayer.h}. A camada contém uma estrutura de dados onde é guardado o descritor da porta série, o baudrate, o tempo de espera após falha de tranmissão, antes de ocorrer nova tentativa, o número de tentativas, o tamanho máximo das tramas I, uma flag contendo a informação de se a instância representa um transmissor ou recetor, uma estrutura de dados contendo as configurações anteriores à utilização do programa, uma variável que nos diz se a próxima trama a enviar/receber é do tipo I0 ou I1, um buffer utilizado para transmissão de informação e por último, informação acerca dos REJ recebidos e tramas I enviadas/recebidas (para efeitos de estatística).
+A implementação da camada de ligação de dados encontra-se nos ficheiros \textit{linklayer.c} e \textit{linklayer.h}. A camada contém uma estrutura de dados onde é guardado o descritor da porta série, o baudrate, o tempo de espera após falha de tranmissão, antes de ocorrer nova tentativa, o número de tentativas, o tamanho máximo das tramas I, uma \textit{flag} contendo a informação de se a instância representa um transmissor ou recetor, uma estrutura de dados contendo as configurações anteriores à utilização do programa, uma variável que nos diz se a próxima trama a enviar/receber é do tipo I0 ou I1, um buffer utilizado para transmissão de informação e por último, informação acerca dos REJ recebidos e tramas I enviadas/recebidas (para efeitos de estatística).
 
 \lstinputlisting[language=C,firstline=29,lastline=41]{TP2/link_layer.c}
 
@@ -185,9 +185,9 @@ A aplicação resultante do trabalho contém dois casos de uso: o caso em que o 
 No caso em que o programa funciona como emissor, temos a seguinte sequência de chamada de funções:
 
 \begin{itemize}
-	\item O main começa por chamar a função \textbf{app\textunderscore transmitter}, que faz o parse das flags inseridas pelo utilizador, cria uma instância de LinkLayer recorrendo à função \textbf{llinit}.
+	\item O main começa por chamar a função \textbf{app\textunderscore transmitter}, que faz o parse das \textit{flags} inseridas pelo utilizador, cria uma instância de LinkLayer recorrendo à função \textbf{llinit}.
 	\item Depois dessa instância ter sido criada com sucesso, tenta estabelecer uma conexão com o recetor através da função \textbf{llopen}.
-	\item Estabelecida a conexão, envia o primeiro pacote de controlo, os pacotes de informação e o segundo pacote de controlo, através da função \textbf{llwrite}.
+	\item Estabelecida a conexão, envia o pacote de controlo inicial, os pacotes de informação e o pacote de controlo final, através da função \textbf{llwrite}.
 	\item Seguidamente, após a informação ter sido enviada, a conexão é fechada recorrendo à função \textbf{llclose}.
 	\item Depois de fechada a conexão, o programa imprime as estatísticas recorrendo à função \textbf{lllog}.
 	\item Por último, destrói a instância de LinkLayer recorrendo à função \textbf{llclose}.
@@ -202,7 +202,7 @@ No caso em que o programa funciona como emissor, temos a seguinte sequência de 
 No caso em que o programa funciona como recetor, temos a seguinte sequência de chamada de funções:
 
 \begin{itemize}
-	\item O main começa por chamar a função \textbf{app\textunderscore receiver}, que faz o parse das flags inseridas pelo utilizador, cria uma instância de LinkLayer recorrendo à função \textbf{llinit}.
+	\item O main começa por chamar a função \textbf{app\textunderscore receiver}, que faz o parse das \textit{flags} inseridas pelo utilizador, cria uma instância de LinkLayer recorrendo à função \textbf{llinit}.
 	\item Depois dessa instância ter sido criada com sucesso, tenta estabelecer uma conexão com o transmissor através da função \textbf{llopen}.
 	\item Estabelecida a conexão, recebe o primeiro pacote de controlo, os pacotes de informação e o segundo pacote de controlo, através da função \textbf{llread}.
 	\item Seguidamente, após a informação ter sido recebida, a conexão é fechada recorrendo à função \textbf{llclose}.
@@ -241,7 +241,7 @@ A função \textbf{llinit} cria uma instância da estrutura de dados LinkLayer, 
 
 A função \textbf{llopen} é responsável por estabelecer uma ligação através da porta de série.
 
-Quando invocada pelo emissor, esta função envia uma \textit{flag} SET, aguardando por uma resposta do recetor sob a forma de uma \textit{flag} UA. Se esta resposta não chegar, o emissor espera um predeterminado número de segundos (definido na variável \textit{timeout}) e tenta reenviar o SET. Se após um número de tentativas estipulado (na variável \textit{max\textunderscore tries} o emissor continuar sem receber o UA, a tentativa de ligação é abortada. Em caso contrário, isso significa que a ligação foi corretamente estabelecida.
+Quando invocada pelo emissor, esta função envia uma \textit{flag} SET, aguardando por uma resposta do recetor sob a forma de uma \textit{flag} UA. Se esta resposta não chegar, o emissor espera um predeterminado número de segundos (definido na variável \textit{timeout}) e tenta reenviar o SET. Se após um número de tentativas estipulado (na variável \textit{max\textunderscore tries}) o emissor continuar sem receber o UA, a tentativa de ligação é abortada. Em caso contrário, isso significa que a ligação foi corretamente estabelecida.
 
 Quando invocada pelo recetor, esta função espera por uma \textit{flag} SET, e, quando a recebe, envia uma \textit{flag} UA. Se não receber o SET ao fim de \textit{max\textunderscore tries} x \textit{timeout}, a tentativa de ligação é abortada. Caso contrário, significa que a ligação foi corretamente estabelecida.
 
@@ -249,7 +249,7 @@ Quando invocada pelo recetor, esta função espera por uma \textit{flag} SET, e,
 
 A função \textbf{llwrite} é utilizada pelo emissor como forma de enviar informação para a porta de série. Recebe um buffer, bem como o seu tamanho, que contêm o conteúdo a enviar.
 
-Recorre à função \textbf{write\textunderscore frame} para enviar esse conteúdo. Esta função prepara as flags, juntando-as ao buffer, e envia a informação pela porta de série.
+Recorre à função \textbf{write\textunderscore frame} para enviar esse conteúdo. Esta função prepara as \textit{flags}, juntando-as ao buffer, e envia a informação pela porta de série.
 
 Depois de terminado o processo de envio, a função llwrite espera por uma resposta do recetor, que pode ser uma \textit{flag} RR se a mensagem tiver sido transmitida corretamente, ou uma \textit{flag} REJ se a mensagem não tiver sido transmitida corretamente, sendo esta retransmitida até ser corretamente aceite ou houver um \textit{timeout}.
 
@@ -261,7 +261,7 @@ Caso receba informação inválida, envia a \textit{flag} REJ. Caso contrário, 
 
 \subsubsection{llclose}
 
-A função \textbf{llclose} é responsável por terminar a ligação. Se o invocador da função for o emissor, esta começará por enviar uma \textit{flag} DISC, e aguardará pela recepção da mesma flag. Quando a receber, envia a \textit{flag} UA e termina. No caso do recetor, espera por uma \textit{flag} DISC, reenviando-a, para por último receber uma flag \textit{flag} UA e terminar a ligação.
+A função \textbf{llclose} é responsável por terminar a ligação. Se o invocador da função for o emissor, esta começará por enviar uma \textit{flag} DISC, e aguardará pela recepção da mesma \textit{flag}. Quando a receber, envia a \textit{flag} UA e termina. No caso do recetor, espera por uma \textit{flag} DISC, reenviando-a, para por último receber uma \textit{flag} UA e terminar a ligação.
 
 \subsubsection{lldelete}
 
@@ -273,7 +273,7 @@ A função \textbf{lllog} imprime no ecrã estatísticas após o término da lig
 
 \subsubsection{get\textunderscore max\textunderscore message\textunderscore size}
 
-A função \textbf{get\textunderscore max\textunderscore message\textunderscore size} retorna o tamanho máximo que pode ter uma trama do tipo I sem as flags necessárias.
+A função \textbf{get\textunderscore max\textunderscore message\textunderscore size} retorna o tamanho máximo do campo de dados das tramas I.
 
 
 %%%%%%%%%%%%%
